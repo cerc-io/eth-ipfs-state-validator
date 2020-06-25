@@ -30,7 +30,7 @@ import (
 var validateTrieCmd = &cobra.Command{
 	Use:   "validateTrie",
 	Short: "Validate completeness of state data on IPFS",
-	Long: `This command is used to validate the completeness of the state trie corresponding to a specific state root`,
+	Long:  `This command is used to validate the completeness of the state trie corresponding to a specific state root`,
 	Run: func(cmd *cobra.Command, args []string) {
 		subCommand = cmd.CalledAs()
 		logWithCommand = *logrus.WithField("SubCommand", subCommand)
