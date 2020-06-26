@@ -17,9 +17,10 @@
 package validator
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/trie"
@@ -52,12 +53,20 @@ func NewValidator(db *sqlx.DB) *Validator {
 // This does consider child storage tries
 func (v *Validator) ValidateTrie(stateRoot common.Hash) error {
 	// Generate the state.NodeIterator for this root
-	snapshotTree := snapshot.New(v.kvs, v.trieDB, 0, stateRoot, false)
-	stateDB, err := state.New(common.Hash{}, v.stateDatabase, snapshotTree)
+	stateDB, err := state.New(common.Hash{}, v.stateDatabase, nil)
 	if err != nil {
 		return err
 	}
 	it := state.NewNodeIterator(stateDB)
+	// state.NodeIterator won't throw an error if we can't find the root node
+	// check if it exists first
+	exists, err := v.kvs.Has(stateRoot.Bytes())
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("root node for hash %s does not exist in database", stateRoot.Hex())
+	}
 	for it.Next() {
 		// iterate through entire state trie and descendent storage tries
 		// it.Next() will return false when we have either completed iteration of the entire trie or have ran into an error (e.g. a missing node)
