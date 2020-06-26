@@ -24,10 +24,13 @@ import (
 )
 
 var (
-	subCommand     string
-	logWithCommand logrus.Entry
-	rootStr        string
-	cfgFile        string
+	subCommand      string
+	logWithCommand  logrus.Entry
+	stateRootStr    string
+	storageRootStr  string
+	validationType  string
+	contractAddrStr string
+	cfgFile         string
 )
 
 // rootCmd represents the base command when called without any subcommands
