@@ -1,10 +1,11 @@
 # eth-ipfs-state-validator
 
-Uses [pg-ipfs-ethdb](https://github.com/vulcanize/pg-ipfs-ethdb) to validate completeness of Ethereum state data on PG-IPFS
+Uses [pg-ipfs-ethdb](https://github.com/vulcanize/pg-ipfs-ethdb) to validate completeness of Ethereum state data on IPFS
 
 ## Background
 
-State data on Ethereum is stored in the form of [Modified Merkle Patricia Tries](https://eth.wiki/en/fundamentals/patricia-tree).
+State data on Ethereum takes the form of [Modified Merkle Patricia Tries](https://eth.wiki/en/fundamentals/patricia-tree).
+On disk each unique node of a trie is stored as a key-value pair between the Keccak256 hash of the RLP-encoded node and the RLP-encoded node.
 To prove the existence of a specific node in an MMPT with a known root hash, one provides a list of all of the nodes along the path descending
 from the root node to the node in question. To validate the completeness of a state database- to confirm every node for a state and/or storage trie(s) is present
 in a database- requires traversing the entire trie (or linked set of tries) and confirming the presence of every node in the database.
