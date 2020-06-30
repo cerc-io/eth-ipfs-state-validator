@@ -24,10 +24,13 @@ import (
 )
 
 var (
-	subCommand     string
-	logWithCommand logrus.Entry
-	rootStr        string
-	cfgFile        string
+	subCommand      string
+	logWithCommand  logrus.Entry
+	stateRootStr    string
+	storageRootStr  string
+	validationType  string
+	contractAddrStr string
+	cfgFile         string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -87,6 +90,7 @@ func init() {
 	rootCmd.PersistentFlags().String("database-hostname", "localhost", "database hostname")
 	rootCmd.PersistentFlags().String("database-user", "", "database user")
 	rootCmd.PersistentFlags().String("database-password", "", "database password")
+	rootCmd.PersistentFlags().String("log-level", logrus.InfoLevel.String(), "Log level (trace, debug, info, warn, error, fatal, panic")
 
 	viper.BindPFlag("logfile", rootCmd.PersistentFlags().Lookup("logfile"))
 	viper.BindPFlag("database.name", rootCmd.PersistentFlags().Lookup("database-name"))
@@ -94,4 +98,5 @@ func init() {
 	viper.BindPFlag("database.hostname", rootCmd.PersistentFlags().Lookup("database-hostname"))
 	viper.BindPFlag("database.user", rootCmd.PersistentFlags().Lookup("database-user"))
 	viper.BindPFlag("database.password", rootCmd.PersistentFlags().Lookup("database-password"))
+	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log-level"))
 }

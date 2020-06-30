@@ -11,6 +11,5 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
-	github.com/vulcanize/ipfs-blockchain-watcher v0.0.11-alpha
 	github.com/vulcanize/pg-ipfs-ethdb v0.0.2-alpha
 )

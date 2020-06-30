@@ -17,9 +17,11 @@
 package validator
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/jmoiron/sqlx"
@@ -35,6 +37,8 @@ type Validator struct {
 }
 
 // NewValidator returns a new trie validator
+// Validating the completeness of a modified merkle patricia tries requires traversing the entire trie and verifying that
+// every node is present, this is an expensive operation
 func NewValidator(db *sqlx.DB) *Validator {
 	kvs := ipfsethdb.NewKeyValueStore(db)
 	database := ipfsethdb.NewDatabase(db)
@@ -45,24 +49,62 @@ func NewValidator(db *sqlx.DB) *Validator {
 	}
 }
 
-// ValidateTrie returns whether or not the trie for the provided root hash is valid and complete
-// Validating the completeness of a modified merkle patricia trie requires traversing the entire trie and verifying that
-// every node is present, this is an expensive operation
-func (v *Validator) ValidateTrie(root common.Hash) (bool, error) {
+// ValidateTrie returns an error if the state and storage tries for the provided state root cannot be confirmed as complete
+// This does consider child storage tries
+func (v *Validator) ValidateTrie(stateRoot common.Hash) error {
 	// Generate the state.NodeIterator for this root
-	snapshotTree := snapshot.New(v.kvs, v.trieDB, 0, root, false)
-	stateDB, err := state.New(common.Hash{}, v.stateDatabase, snapshotTree)
+	stateDB, err := state.New(common.Hash{}, v.stateDatabase, nil)
 	if err != nil {
-		return false, err
+		return err
 	}
 	it := state.NewNodeIterator(stateDB)
+	// state.NodeIterator won't throw an error if we can't find the root node
+	// check if it exists first
+	exists, err := v.kvs.Has(stateRoot.Bytes())
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("root node for hash %s does not exist in database", stateRoot.Hex())
+	}
 	for it.Next() {
-		// iterate through entire trie
-		// it.Next() will return false when we have either completed iteration of the entire trie or have ran into an error
+		// iterate through entire state trie and descendent storage tries
+		// it.Next() will return false when we have either completed iteration of the entire trie or have ran into an error (e.g. a missing node)
 		// if we are able to iterate through the entire trie without error then the trie is complete
 	}
-	if it.Error != nil {
-		return false, it.Error
+	return it.Error
+}
+
+// ValidateStateTrie returns an error if the state trie for the provided state root cannot be confirmed as complete
+// This does not consider child storage tries
+func (v *Validator) ValidateStateTrie(stateRoot common.Hash) error {
+	// Generate the trie.NodeIterator for this root
+	t, err := v.stateDatabase.OpenTrie(stateRoot)
+	if err != nil {
+		return err
 	}
-	return true, nil
+	it := t.NodeIterator(nil)
+	for it.Next(true) {
+		// iterate through entire state trie
+		// it.Next() will return false when we have either completed iteration of the entire trie or have ran into an error (e.g. a missing node)
+		// if we are able to iterate through the entire trie without error then the trie is complete
+	}
+	return it.Error()
+}
+
+// ValidateStorageTrie returns an error if the storage trie for the provided storage root and contract address cannot be confirmed as complete
+func (v *Validator) ValidateStorageTrie(address common.Address, storageRoot common.Hash) error {
+	// Generate the state.NodeIterator for this root
+	addrHash := crypto.Keccak256Hash(address.Bytes())
+	t, err := v.stateDatabase.OpenStorageTrie(addrHash, storageRoot)
+	if err != nil {
+		return err
+	}
+	it := t.NodeIterator(nil)
+	for it.Next(true) {
+		// iterate through entire storage trie
+		// it.Next() will return false when we have either completed iteration of the entire trie or have ran into an error (e.g. a missing node)
+		// if we are able to iterate through the entire trie without error then the trie is complete
+	}
+	return it.Error()
 }
