@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/vulcanize/eth-ipfs-state-validator)](https://goreportcard.com/report/github.com/vulcanize/eth-ipfs-state-validator)
 
-> Uses [pg-ipfs-ethdb](https://github.com/vulcanize/pg-ipfs-ethdb) to validate completeness of Ethereum state data on IPFS
+> Uses [ipfs-ethdb](https://github.com/vulcanize/ipfs-ethdb/postgres) to validate completeness of IPFS Ethereum state data
 
 ## Background
 

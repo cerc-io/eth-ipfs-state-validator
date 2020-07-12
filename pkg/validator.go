@@ -26,7 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/vulcanize/pg-ipfs-ethdb"
+	pgipfsethdb "github.com/vulcanize/pg-ipfs-ethdb/postgres"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
@@ -40,8 +40,8 @@ type Validator struct {
 // Validating the completeness of a modified merkle patricia tries requires traversing the entire trie and verifying that
 // every node is present, this is an expensive operation
 func NewValidator(db *sqlx.DB) *Validator {
-	kvs := ipfsethdb.NewKeyValueStore(db)
-	database := ipfsethdb.NewDatabase(db)
+	kvs := pgipfsethdb.NewKeyValueStore(db)
+	database := pgipfsethdb.NewDatabase(db)
 	return &Validator{
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),
