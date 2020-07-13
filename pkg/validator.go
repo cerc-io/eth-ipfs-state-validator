@@ -24,9 +24,11 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/trie"
+	"github.com/ipfs/go-blockservice"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/vulcanize/pg-ipfs-ethdb"
+	"github.com/vulcanize/ipfs-ethdb"
+	"github.com/vulcanize/ipfs-ethdb/postgres"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
@@ -36,12 +38,32 @@ type Validator struct {
 	stateDatabase state.Database
 }
 
+// NewPGIPFSValidator returns a new trie validator ontop of a connection pool for an IPFS backing Postgres database
+func NewPGIPFSValidator(db *sqlx.DB) *Validator {
+	kvs := pgipfsethdb.NewKeyValueStore(db)
+	database := pgipfsethdb.NewDatabase(db)
+	return &Validator{
+		kvs:           kvs,
+		trieDB:        trie.NewDatabase(kvs),
+		stateDatabase: state.NewDatabase(database),
+	}
+}
+
+// NewIPFSValidator returns a new trie validator ontop of an IPFS blockservice
+func NewIPFSValidator(bs blockservice.BlockService) *Validator {
+	kvs := ipfsethdb.NewKeyValueStore(bs)
+	database := ipfsethdb.NewDatabase(bs)
+	return &Validator{
+		kvs:           kvs,
+		trieDB:        trie.NewDatabase(kvs),
+		stateDatabase: state.NewDatabase(database),
+	}
+}
+
 // NewValidator returns a new trie validator
 // Validating the completeness of a modified merkle patricia tries requires traversing the entire trie and verifying that
 // every node is present, this is an expensive operation
-func NewValidator(db *sqlx.DB) *Validator {
-	kvs := ipfsethdb.NewKeyValueStore(db)
-	database := ipfsethdb.NewDatabase(db)
+func NewValidator(kvs ethdb.KeyValueStore, database ethdb.Database) *Validator {
 	return &Validator{
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),

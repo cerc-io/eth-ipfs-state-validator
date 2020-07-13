@@ -32,6 +32,8 @@ var validateTrieCmd = &cobra.Command{
 	Short: "Validate completeness of state data on IPFS",
 	Long: `This command is used to validate the completeness of state data corresponding specific to a specific root
 
+If an ipfs-path is provided it will use a blockservice, otherwise it expects Postgres db configuration in a linked config file.
+
 It can operate at three levels: 
 
 "full" validates completeness of the entire state corresponding to a provided state root, including both state and storage tries
@@ -56,11 +58,10 @@ It can operate at three levels:
 }
 
 func validateTrie() {
-	db, err := validator.NewDB()
+	v, err := newValidator()
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
-	v := validator.NewValidator(db)
 	switch strings.ToLower(validationType) {
 	case "f", "full":
 		if stateRootStr == "" {
@@ -96,10 +97,26 @@ func validateTrie() {
 	}
 }
 
+func newValidator() (*validator.Validator, error) {
+	if ipfsPath == "" {
+		db, err := validator.NewDB()
+		if err != nil {
+			logWithCommand.Fatal(err)
+		}
+		return validator.NewPGIPFSValidator(db), nil
+	}
+	bs, err := validator.InitIPFSBlockService(ipfsPath)
+	if err != nil {
+		return nil, err
+	}
+	return validator.NewIPFSValidator(bs), nil
+}
+
 func init() {
 	rootCmd.AddCommand(validateTrieCmd)
 	validateTrieCmd.Flags().StringVarP(&stateRootStr, "state-root", "s", "", "Root of the state trie we wish to validate; for full or state validation")
 	validateTrieCmd.Flags().StringVarP(&validationType, "type", "t", "full", "Type of validations: full, state, storage")
 	validateTrieCmd.Flags().StringVarP(&storageRootStr, "storage-root", "o", "", "Root of the storage trie we wish to validate; for storage validation")
 	validateTrieCmd.Flags().StringVarP(&contractAddrStr, "address", "a", "", "Contract address for the storage trie we wish to validate; for storage validation")
+	validateTrieCmd.Flags().StringVarP(&ipfsPath, "ipfs-path", "i", "", "Path to IPFS repository")
 }
