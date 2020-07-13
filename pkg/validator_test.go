@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/vulcanize/eth-ipfs-state-validator/pkg"
-	"github.com/vulcanize/pg-ipfs-ethdb/postgres"
+	"github.com/vulcanize/ipfs-ethdb/postgres"
 )
 
 var (
@@ -192,18 +192,17 @@ var (
 	err error
 )
 
-var _ = Describe("Validator", func() {
+var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
 		db, err = pgipfsethdb.TestDB()
 		Expect(err).ToNot(HaveOccurred())
-		v = validator.NewValidator(db)
+		v = validator.NewPGIPFSValidator(db)
 	})
-	AfterEach(func() {
-		err = pgipfsethdb.ResetTestDB(db)
-		Expect(err).ToNot(HaveOccurred())
-	})
-
 	Describe("ValidateTrie", func() {
+		AfterEach(func() {
+			err = validator.ResetTestDB(db)
+			Expect(err).ToNot(HaveOccurred())
+		})
 		It("Returns an error the state root node is missing", func() {
 			loadTrie(missingRootStateNodes, trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
@@ -236,6 +235,10 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("ValidateStateTrie", func() {
+		AfterEach(func() {
+			err = validator.ResetTestDB(db)
+			Expect(err).ToNot(HaveOccurred())
+		})
 		It("Returns an error the state root node is missing", func() {
 			loadTrie(missingRootStateNodes, nil)
 			err = v.ValidateStateTrie(stateRoot)
@@ -256,6 +259,10 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("ValidateStorageTrie", func() {
+		AfterEach(func() {
+			err = validator.ResetTestDB(db)
+			Expect(err).ToNot(HaveOccurred())
+		})
 		It("Returns an error the storage root node is missing", func() {
 			loadTrie(nil, missingRootStorageNodes)
 			err = v.ValidateStorageTrie(contractAddr, storageRoot)

@@ -17,9 +17,14 @@
 package validator
 
 import (
+	"context"
+
+	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-ipfs-blockstore"
 	"github.com/ipfs/go-ipfs-ds-help"
+	"github.com/ipfs/go-ipfs/core"
+	"github.com/ipfs/go-ipfs/repo/fsrepo"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -48,4 +53,28 @@ func RawdataToCid(codec uint64, rawdata []byte, multiHash uint64) (cid.Cid, erro
 		return cid.Cid{}, err
 	}
 	return c, nil
+}
+
+// InitIPFSBlockService is used to configure and return a BlockService using an ipfs repo path (e.g. ~/.ipfs)
+func InitIPFSBlockService(ipfsPath string) (blockservice.BlockService, error) {
+	r, openErr := fsrepo.Open(ipfsPath)
+	if openErr != nil {
+		return nil, openErr
+	}
+	ctx := context.Background()
+	cfg := &core.BuildCfg{
+		Online: false,
+		Repo:   r,
+	}
+	ipfsNode, newNodeErr := core.NewNode(ctx, cfg)
+	if newNodeErr != nil {
+		return nil, newNodeErr
+	}
+	return ipfsNode.Blocks, nil
+}
+
+// ResetTestDB drops all rows in the test db public.blocks table
+func ResetTestDB(db *sqlx.DB) error {
+	_, err := db.Exec("DELETE FROM public.blocks")
+	return err
 }
