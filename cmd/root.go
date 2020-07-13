@@ -16,7 +16,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -24,14 +26,9 @@ import (
 )
 
 var (
-	subCommand      string
-	logWithCommand  logrus.Entry
-	stateRootStr    string
-	storageRootStr  string
-	validationType  string
-	contractAddrStr string
-	cfgFile         string
-	ipfsPath        string
+	subCommand     string
+	logWithCommand logrus.Entry
+	cfgFile        string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -82,6 +79,8 @@ func logLevel() error {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file location")
@@ -100,4 +99,17 @@ func init() {
 	viper.BindPFlag("database.user", rootCmd.PersistentFlags().Lookup("database-user"))
 	viper.BindPFlag("database.password", rootCmd.PersistentFlags().Lookup("database-password"))
 	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log-level"))
+}
+
+func initConfig() {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+		if err := viper.ReadInConfig(); err == nil {
+			logrus.Printf("Using config file: %s", viper.ConfigFileUsed())
+		} else {
+			logrus.Fatal(fmt.Sprintf("Couldn't read config file: %s", err.Error()))
+		}
+	} else {
+		logrus.Warn("No config file passed with --config flag")
+	}
 }

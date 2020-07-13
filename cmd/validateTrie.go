@@ -22,6 +22,7 @@ import (
 	_ "github.com/lib/pq" //postgres driver
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/vulcanize/eth-ipfs-state-validator/pkg"
 )
@@ -62,7 +63,10 @@ func validateTrie() {
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
-	switch strings.ToLower(validationType) {
+	stateRootStr := viper.GetString("validator.stateRoot")
+	storageRootStr := viper.GetString("validator.storageRoot")
+	contractAddrStr := viper.GetString("validator.address")
+	switch strings.ToLower(viper.GetString("validator.type")) {
 	case "f", "full":
 		if stateRootStr == "" {
 			logWithCommand.Fatal("must provide a state root for full state validation")
@@ -98,6 +102,7 @@ func validateTrie() {
 }
 
 func newValidator() (*validator.Validator, error) {
+	ipfsPath := viper.GetString("ipfs.path")
 	if ipfsPath == "" {
 		db, err := validator.NewDB()
 		if err != nil {
@@ -114,9 +119,16 @@ func newValidator() (*validator.Validator, error) {
 
 func init() {
 	rootCmd.AddCommand(validateTrieCmd)
-	validateTrieCmd.Flags().StringVarP(&stateRootStr, "state-root", "s", "", "Root of the state trie we wish to validate; for full or state validation")
-	validateTrieCmd.Flags().StringVarP(&validationType, "type", "t", "full", "Type of validations: full, state, storage")
-	validateTrieCmd.Flags().StringVarP(&storageRootStr, "storage-root", "o", "", "Root of the storage trie we wish to validate; for storage validation")
-	validateTrieCmd.Flags().StringVarP(&contractAddrStr, "address", "a", "", "Contract address for the storage trie we wish to validate; for storage validation")
-	validateTrieCmd.Flags().StringVarP(&ipfsPath, "ipfs-path", "i", "", "Path to IPFS repository")
+
+	validateTrieCmd.PersistentFlags().String("state-root", "", "Root of the state trie we wish to validate; for full or state validation")
+	validateTrieCmd.PersistentFlags().String("type", "", "Type of validations: full, state, storage")
+	validateTrieCmd.PersistentFlags().String("storage-root", "", "Root of the storage trie we wish to validate; for storage validation")
+	validateTrieCmd.PersistentFlags().String("address", "", "Contract address for the storage trie we wish to validate; for storage validation")
+	validateTrieCmd.PersistentFlags().String("ipfs-path", "", "Path to IPFS repository; if provided operations move through the IPFS repo otherwise Postgres connection params are expected in the provided config")
+
+	viper.BindPFlag("validator.stateRoot", validateTrieCmd.PersistentFlags().Lookup("state-root"))
+	viper.BindPFlag("validator.type", validateTrieCmd.PersistentFlags().Lookup("type"))
+	viper.BindPFlag("validator.storageRoot", validateTrieCmd.PersistentFlags().Lookup("storage-root"))
+	viper.BindPFlag("validator.address", validateTrieCmd.PersistentFlags().Lookup("address"))
+	viper.BindPFlag("ipfs.path", validateTrieCmd.PersistentFlags().Lookup("ipfs-path"))
 }
