@@ -1,6 +1,10 @@
 [database]
-    name     = "vulcanize_public" # $DATABASE_NAME
-    hostname = "localhost" # $DATABASE_HOSTNAME
-    port     = 5432 # $DATABASE_PORT
-    user     = "postgres" # $DATABASE_USER
-    password = "" # $DATABASE_PASSWORD
+    name     = "vulcanize_public"
+    hostname = "localhost"
+    port     = 5432
+    user     = "postgres"
+    password = ""
+
+[validator]
+    type = "state"
+    stateRoot = "0xd7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544"
