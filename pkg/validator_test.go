@@ -17,6 +17,7 @@
 package validator_test
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -62,10 +63,12 @@ var (
 	})
 	stateRoot = crypto.Keccak256Hash(stateBranchRootNode)
 
+	mockCode           = []byte{1, 2, 3, 4, 5}
+	codeHash           = crypto.Keccak256Hash(mockCode)
 	contractAccount, _ = rlp.EncodeToBytes(state.Account{
 		Nonce:    1,
 		Balance:  big.NewInt(0),
-		CodeHash: common.HexToHash("0xaaea5efba4fd7b45d7ec03918ac5d8b31aa93b48986af0e6b591f0f087c80127").Bytes(),
+		CodeHash: codeHash.Bytes(),
 		Root:     crypto.Keccak256Hash(storageBranchRootNode),
 	})
 	contractAccountLeafNode, _ = rlp.EncodeToBytes([]interface{}{
@@ -204,31 +207,40 @@ var _ = Describe("PG-IPFS Validator", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
-			loadTrie(missingRootStateNodes, trieStorageNodes)
+			// we write code to ethdb, there should probably be an EthCode IPLD codec
+			// but there isn't, and we don't need one here since blockstore keys are mh-derived
+			loadTrie(append(missingRootStateNodes, mockCode), trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("does not exist in database"))
+			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
-		It("Fails to return an error if the storage root node is missing", func() {
-			// NOTE this failure was not expected and renders this approach unreliable, this is an issue with the go-ethereum core/state/iterator.NodeIterator
-			loadTrie(trieStateNodes, missingRootStorageNodes)
+		It("Returns an error if the storage root node is missing", func() {
+			loadTrie(append(trieStateNodes, mockCode), missingRootStorageNodes)
 			err = v.ValidateTrie(stateRoot)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
-		It("Fails to return an error if the entire state (state trie and storage tries) cannot be validated", func() {
-			// NOTE this failure was not expected and renders this approach unreliable, this is an issue with the go-ethereum core/state/iterator.NodeIterator
-			loadTrie(missingNodeStateNodes, trieStorageNodes)
+		It("Returns an error if the state trie is missing node(s)", func() {
+			loadTrie(append(missingNodeStateNodes, mockCode), trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
-		It("Fails to return an error if the entire state (state trie and storage tries) cannot be validated", func() {
-			// NOTE this failure was not expected and renders this approach unreliable, this is an issue with the go-ethereum core/state/iterator.NodeIterator
-			loadTrie(trieStateNodes, missingNodeStorageNodes)
+		It("Returns an error if the storage trie is missing node(s)", func() {
+			loadTrie(append(trieStateNodes, mockCode), missingNodeStorageNodes)
 			err = v.ValidateTrie(stateRoot)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+		})
+		It("Returns an error if contract code is missing", func() {
+			loadTrie(trieStateNodes, trieStorageNodes)
+			err = v.ValidateTrie(stateRoot)
+			Expect(err).To(HaveOccurred())
+			subStr := fmt.Sprintf("code %s: sql: no rows in result set", codeHash.Hex()[2:])
+			Expect(err.Error()).To(ContainSubstring(subStr))
 		})
 		It("Returns no error if the entire state (state trie and storage tries) can be validated", func() {
-			loadTrie(trieStateNodes, trieStorageNodes)
+			loadTrie(append(trieStateNodes, mockCode), trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).ToNot(HaveOccurred())
 		})
