@@ -3,7 +3,7 @@ module github.com/vulcanize/eth-ipfs-state-validator
 go 1.13
 
 require (
-	github.com/ethereum/go-ethereum v1.9.15
+	github.com/ethereum/go-ethereum v1.9.25
 	github.com/ipfs/go-blockservice v0.1.3
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-filestore v1.0.0 //indirect
