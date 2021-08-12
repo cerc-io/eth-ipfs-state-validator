@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -24,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vulcanize/eth-ipfs-state-validator/pkg"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/pkg"
 )
 
 // validateTrieCmd represents the validateTrie command
@@ -35,7 +36,7 @@ var validateTrieCmd = &cobra.Command{
 
 If an ipfs-path is provided it will use a blockservice, otherwise it expects Postgres db configuration in a linked config file.
 
-It can operate at three levels: 
+It can operate at three levels:
 
 "full" validates completeness of the entire state corresponding to a provided state root, including both state and storage tries
 
@@ -99,6 +100,19 @@ func validateTrie() {
 		}
 		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr.String(), storageRoot.String())
 	}
+
+	stats := v.GetCacheStats()
+	fmt.Println("---- Stats ----")
+	fmt.Println("[Gets] - any Get request, including from peers =>", stats.Gets)
+	fmt.Println("[CacheHits] - either cache was good =>", stats.CacheHits)
+	fmt.Println("[GetFromPeersLatencyLower] - slowest duration to request value from peers =>", stats.GetFromPeersLatencyLower)
+	fmt.Println("[PeerLoads] - either remote load or remote cache hit (not an error) =>", stats.PeerLoads)
+	fmt.Println("[PeerErrors] - peer errors =>", stats.PeerErrors)
+	fmt.Println("[Loads] - database loads == (Gets - CacheHits) =>", stats.Loads)
+	fmt.Println("[LoadsDeduped] - after singleflight =>", stats.LoadsDeduped)
+	fmt.Println("[LocalLoads] - total good local loads =>", stats.LocalLoads)
+	fmt.Println("[LocalLoadErrs] - total bad local loads =>", stats.LocalLoadErrs)
+	fmt.Println("[ServerRequests] - gets that came over the network from peers =>", stats.ServerRequests)
 }
 
 func newValidator() (*validator.Validator, error) {

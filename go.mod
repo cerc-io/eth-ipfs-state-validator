@@ -12,6 +12,7 @@ require (
 	github.com/ipfs/go-ipfs-ds-help v1.0.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.5.2
+	github.com/mailgun/groupcache/v2 v2.2.1 // indirect
 	github.com/multiformats/go-multihash v0.0.14
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
@@ -20,3 +21,5 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/vulcanize/ipfs-ethdb v0.0.2
 )
+
+replace github.com/vulcanize/ipfs-ethdb v0.0.2 => ../ipfs-ethdb
