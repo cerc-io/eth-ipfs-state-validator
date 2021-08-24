@@ -16,7 +16,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -102,17 +101,7 @@ func validateTrie() {
 	}
 
 	stats := v.GetCacheStats()
-	fmt.Println("---- Stats ----")
-	fmt.Println("[Gets] - any Get request, including from peers =>", stats.Gets)
-	fmt.Println("[CacheHits] - either cache was good =>", stats.CacheHits)
-	fmt.Println("[GetFromPeersLatencyLower] - slowest duration to request value from peers =>", stats.GetFromPeersLatencyLower)
-	fmt.Println("[PeerLoads] - either remote load or remote cache hit (not an error) =>", stats.PeerLoads)
-	fmt.Println("[PeerErrors] - peer errors =>", stats.PeerErrors)
-	fmt.Println("[Loads] - database loads == (Gets - CacheHits) =>", stats.Loads)
-	fmt.Println("[LoadsDeduped] - after singleflight =>", stats.LoadsDeduped)
-	fmt.Println("[LocalLoads] - total good local loads =>", stats.LocalLoads)
-	fmt.Println("[LocalLoadErrs] - total bad local loads =>", stats.LocalLoadErrs)
-	fmt.Println("[ServerRequests] - gets that came over the network from peers =>", stats.ServerRequests)
+	logWithCommand.Debugf("groupcache stats %+v", stats)
 }
 
 func newValidator() (*validator.Validator, error) {
