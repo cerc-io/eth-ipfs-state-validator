@@ -17,6 +17,8 @@
 package validator
 
 import (
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -24,9 +26,10 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ipfs/go-blockservice"
 	"github.com/jmoiron/sqlx"
+	"github.com/mailgun/groupcache/v2"
 
-	"github.com/vulcanize/ipfs-ethdb"
-	"github.com/vulcanize/ipfs-ethdb/postgres"
+	ipfsethdb "github.com/vulcanize/ipfs-ethdb"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/postgres"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
@@ -34,17 +37,33 @@ type Validator struct {
 	kvs           ethdb.KeyValueStore
 	trieDB        *trie.Database
 	stateDatabase state.Database
+	db            *pgipfsethdb.Database
 }
 
 // NewPGIPFSValidator returns a new trie validator ontop of a connection pool for an IPFS backing Postgres database
 func NewPGIPFSValidator(db *sqlx.DB) *Validator {
-	kvs := pgipfsethdb.NewKeyValueStore(db)
-	database := pgipfsethdb.NewDatabase(db)
+	kvs := pgipfsethdb.NewKeyValueStore(db, pgipfsethdb.CacheConfig{
+		Name:           "kv",
+		Size:           16 * 1000 * 1000, // 16MB
+		ExpiryDuration: time.Hour * 8,    // 8 hours
+	})
+
+	database := pgipfsethdb.NewDatabase(db, pgipfsethdb.CacheConfig{
+		Name:           "db",
+		Size:           16 * 1000 * 1000, // 16MB
+		ExpiryDuration: time.Hour * 8,    // 8 hours
+	})
+
 	return &Validator{
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),
 		stateDatabase: state.NewDatabase(database),
+		db:            database,
 	}
+}
+
+func (v *Validator) GetCacheStats() groupcache.Stats {
+	return v.db.GetCacheStats()
 }
 
 // NewIPFSValidator returns a new trie validator ontop of an IPFS blockservice

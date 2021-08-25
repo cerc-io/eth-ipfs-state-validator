@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vulcanize/eth-ipfs-state-validator/pkg"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/pkg"
 )
 
 // validateTrieCmd represents the validateTrie command
@@ -35,7 +35,7 @@ var validateTrieCmd = &cobra.Command{
 
 If an ipfs-path is provided it will use a blockservice, otherwise it expects Postgres db configuration in a linked config file.
 
-It can operate at three levels: 
+It can operate at three levels:
 
 "full" validates completeness of the entire state corresponding to a provided state root, including both state and storage tries
 
@@ -99,6 +99,9 @@ func validateTrie() {
 		}
 		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr.String(), storageRoot.String())
 	}
+
+	stats := v.GetCacheStats()
+	logWithCommand.Debugf("groupcache stats %+v", stats)
 }
 
 func newValidator() (*validator.Validator, error) {
