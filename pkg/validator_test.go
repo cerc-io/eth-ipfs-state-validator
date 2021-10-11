@@ -21,7 +21,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ipfs/go-cid/_rsrch/cidiface"
@@ -65,7 +65,7 @@ var (
 
 	mockCode           = []byte{1, 2, 3, 4, 5}
 	codeHash           = crypto.Keccak256Hash(mockCode)
-	contractAccount, _ = rlp.EncodeToBytes(state.Account{
+	contractAccount, _ = rlp.EncodeToBytes(types.StateAccount{
 		Nonce:    1,
 		Balance:  big.NewInt(0),
 		CodeHash: codeHash.Bytes(),
@@ -76,7 +76,7 @@ var (
 		contractAccount,
 	})
 
-	minerAccount, _ = rlp.EncodeToBytes(state.Account{
+	minerAccount, _ = rlp.EncodeToBytes(types.StateAccount{
 		Nonce:    0,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
@@ -87,7 +87,7 @@ var (
 		minerAccount,
 	})
 
-	account1, _ = rlp.EncodeToBytes(state.Account{
+	account1, _ = rlp.EncodeToBytes(types.StateAccount{
 		Nonce:    2,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
@@ -98,7 +98,7 @@ var (
 		account1,
 	})
 
-	account2, _ = rlp.EncodeToBytes(state.Account{
+	account2, _ = rlp.EncodeToBytes(types.StateAccount{
 		Nonce:    0,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
@@ -109,7 +109,7 @@ var (
 		account2,
 	})
 
-	bankAccount, _ = rlp.EncodeToBytes(state.Account{
+	bankAccount, _ = rlp.EncodeToBytes(types.StateAccount{
 		Nonce:    2,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
