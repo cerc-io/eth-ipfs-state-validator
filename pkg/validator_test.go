@@ -24,14 +24,14 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ipfs/go-cid/_rsrch/cidiface"
+	cid "github.com/ipfs/go-cid/_rsrch/cidiface"
 	"github.com/jmoiron/sqlx"
 	"github.com/multiformats/go-multihash"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/vulcanize/eth-ipfs-state-validator/pkg"
-	"github.com/vulcanize/ipfs-ethdb/postgres"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/pkg"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/postgres"
 )
 
 var (
@@ -201,6 +201,9 @@ var _ = Describe("PG-IPFS Validator", func() {
 		Expect(err).ToNot(HaveOccurred())
 		v = validator.NewPGIPFSValidator(db)
 	})
+	AfterEach(func() {
+		v.Close()
+	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
 			err = validator.ResetTestDB(db)
@@ -236,7 +239,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 			loadTrie(trieStateNodes, trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
-			subStr := fmt.Sprintf("code %s: sql: no rows in result set", codeHash.Hex()[2:])
+			subStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
 			Expect(err.Error()).To(ContainSubstring(subStr))
 		})
 		It("Returns no error if the entire state (state trie and storage tries) can be validated", func() {
