@@ -138,3 +138,11 @@ func (v *Validator) ValidateStorageTrie(address common.Address, storageRoot comm
 	}
 	return it.Error()
 }
+
+// Close implements io.Closer
+// it deregisters the groupcache name
+func (v *Validator) Close() error {
+	groupcache.DeregisterGroup("kv")
+	groupcache.DeregisterGroup("db")
+	return nil
+}
