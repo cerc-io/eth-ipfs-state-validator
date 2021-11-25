@@ -17,6 +17,7 @@
 package validator_test
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 
@@ -24,14 +25,14 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql"
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql/postgres"
 	cid "github.com/ipfs/go-cid/_rsrch/cidiface"
-	"github.com/jmoiron/sqlx"
 	"github.com/multiformats/go-multihash"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	validator "github.com/vulcanize/eth-ipfs-state-validator/pkg"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/postgres"
 )
 
 var (
@@ -41,6 +42,7 @@ var (
 	nullCodeHash      = crypto.Keccak256Hash([]byte{})
 	emptyRootNode, _  = rlp.EncodeToBytes([]byte{})
 	emptyContractRoot = crypto.Keccak256Hash(emptyRootNode)
+	ctx            = context.Background()
 
 	stateBranchRootNode, _ = rlp.EncodeToBytes([]interface{}{
 		crypto.Keccak256(bankAccountLeafNode),
@@ -191,13 +193,13 @@ var (
 
 var (
 	v   *validator.Validator
-	db  *sqlx.DB
+	db  sql.Database
 	err error
 )
 
 var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
-		db, err = pgipfsethdb.TestDB()
+		db, err = postgres.SetupSQLXDB()
 		Expect(err).ToNot(HaveOccurred())
 		v = validator.NewPGIPFSValidator(db)
 	})
@@ -206,7 +208,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = validator.ResetTestDB(ctx,db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
@@ -251,7 +253,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = validator.ResetTestDB(ctx,db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
@@ -275,7 +277,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStorageTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = validator.ResetTestDB(ctx,db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the storage root node is missing", func() {
@@ -299,16 +301,16 @@ var _ = Describe("PG-IPFS Validator", func() {
 })
 
 func loadTrie(stateNodes, storageNodes [][]byte) {
-	tx, err := db.Beginx()
+	tx, err := db.Begin(ctx)
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node)
+		_, err := validator.PublishRaw(ctx,tx, cid.EthStateTrie, multihash.KECCAK_256, node)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node)
+		_, err := validator.PublishRaw(ctx,tx, cid.EthStorageTrie, multihash.KECCAK_256, node)
 		Expect(err).ToNot(HaveOccurred())
 	}
-	err = tx.Commit()
+	err = tx.Commit(ctx)
 	Expect(err).ToNot(HaveOccurred())
 }

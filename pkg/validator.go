@@ -23,9 +23,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ipfs/go-blockservice"
-	"github.com/jmoiron/sqlx"
 	"github.com/mailgun/groupcache/v2"
 
 	ipfsethdb "github.com/vulcanize/ipfs-ethdb"
@@ -41,7 +41,7 @@ type Validator struct {
 }
 
 // NewPGIPFSValidator returns a new trie validator ontop of a connection pool for an IPFS backing Postgres database
-func NewPGIPFSValidator(db *sqlx.DB) *Validator {
+func NewPGIPFSValidator(db sql.Database) *Validator {
 	kvs := pgipfsethdb.NewKeyValueStore(db, pgipfsethdb.CacheConfig{
 		Name:           "kv",
 		Size:           16 * 1000 * 1000, // 16MB

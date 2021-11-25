@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"context"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -59,7 +60,8 @@ It can operate at three levels:
 }
 
 func validateTrie() {
-	v, err := newValidator()
+	ctx := context.Background()
+	v, err := newValidator(ctx)
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
@@ -104,10 +106,10 @@ func validateTrie() {
 	logWithCommand.Debugf("groupcache stats %+v", stats)
 }
 
-func newValidator() (*validator.Validator, error) {
+func newValidator(ctx context.Context) (*validator.Validator, error) {
 	ipfsPath := viper.GetString("ipfs.path")
 	if ipfsPath == "" {
-		db, err := validator.NewDB()
+		db, err := validator.NewDB(ctx)
 		if err != nil {
 			logWithCommand.Fatal(err)
 		}

@@ -17,9 +17,11 @@
 package validator
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql"
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql/postgres"
+	"github.com/ethereum/go-ethereum/statediff/indexer/node"
 	"github.com/spf13/viper"
 )
 
@@ -33,42 +35,35 @@ const (
 )
 
 // NewDB returns a new sqlx.DB from config/cli/env variables
-func NewDB() (*sqlx.DB, error) {
-	c := Config{}
-	c.Init()
-	return sqlx.Connect("postgres", c.ConnString())
-}
-
-type Config struct {
-	Hostname string
-	Name     string
-	User     string
-	Password string
-	Port     int
-}
-
-func (c *Config) ConnString() string {
-	if len(c.User) > 0 && len(c.Password) > 0 {
-		return fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable",
-			c.User, c.Password, c.Hostname, c.Port, c.Name)
+func NewDB(ctx context.Context) (sql.Database, error) {
+	var c postgres.Config
+	Init(&c)
+	info := node.Info{
+		GenesisBlock: "GenesisBlock",
+		NetworkID:    "1",
+		ChainID:      1,
+		ID:           "1",
+		ClientName:   "geth",
 	}
-	if len(c.User) > 0 && len(c.Password) == 0 {
-		return fmt.Sprintf("postgresql://%s@%s:%d/%s?sslmode=disable",
-			c.User, c.Hostname, c.Port, c.Name)
+
+	driver, err := postgres.NewPGXDriver(ctx, c,info)
+	if err != nil {
+		return nil, err
 	}
-	return fmt.Sprintf("postgresql://%s:%d/%s?sslmode=disable", c.Hostname, c.Port, c.Name)
+
+	return postgres.NewPostgresDB(driver), nil
 }
 
-func (c *Config) Init() {
+func Init(c *postgres.Config) {
 	viper.BindEnv("database.name", DATABASE_NAME)
 	viper.BindEnv("database.hostname", DATABASE_HOSTNAME)
 	viper.BindEnv("database.port", DATABASE_PORT)
 	viper.BindEnv("database.user", DATABASE_USER)
 	viper.BindEnv("database.password", DATABASE_PASSWORD)
 
-	c.Name = viper.GetString("database.name")
+	c.DatabaseName = viper.GetString("database.name")
 	c.Hostname = viper.GetString("database.hostname")
 	c.Port = viper.GetInt("database.port")
-	c.User = viper.GetString("database.user")
+	c.Username = viper.GetString("database.user")
 	c.Password = viper.GetString("database.password")
 }

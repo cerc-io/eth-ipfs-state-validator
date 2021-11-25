@@ -19,24 +19,24 @@ package validator
 import (
 	"context"
 
+	"github.com/ethereum/go-ethereum/statediff/indexer/database/sql"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	dshelp "github.com/ipfs/go-ipfs-ds-help"
 	"github.com/ipfs/go-ipfs/core"
 	"github.com/ipfs/go-ipfs/repo/fsrepo"
-	"github.com/jmoiron/sqlx"
 )
 
 // PublishRaw derives a cid from raw bytes and provided codec and multihash type, and writes it to the db tx
-func PublishRaw(tx *sqlx.Tx, codec, mh uint64, raw []byte) (string, error) {
+func PublishRaw(ctx context.Context, tx sql.Tx, codec, mh uint64, raw []byte) (string, error) {
 	c, err := RawdataToCid(codec, raw, mh)
 	if err != nil {
 		return "", err
 	}
 	dbKey := dshelp.MultihashToDsKey(c.Hash())
 	prefixedKey := blockstore.BlockPrefix.String() + dbKey.String()
-	_, err = tx.Exec(`INSERT INTO public.blocks (key, data) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, prefixedKey, raw)
+	_, err = tx.Exec(ctx, `INSERT INTO public.blocks (key, data) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, prefixedKey, raw)
 	return c.String(), err
 }
 
@@ -74,7 +74,7 @@ func InitIPFSBlockService(ipfsPath string) (blockservice.BlockService, error) {
 }
 
 // ResetTestDB drops all rows in the test db public.blocks table
-func ResetTestDB(db *sqlx.DB) error {
-	_, err := db.Exec("DELETE FROM public.blocks")
+func ResetTestDB(ctx context.Context,db sql.Database) error {
+	_, err := db.Exec(ctx, "DELETE FROM public.blocks")
 	return err
 }
