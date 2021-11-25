@@ -10,7 +10,6 @@ require (
 	github.com/ipfs/go-ipfs v0.10.0
 	github.com/ipfs/go-ipfs-blockstore v1.0.1
 	github.com/ipfs/go-ipfs-ds-help v1.0.0
-	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.10.2
 	github.com/mailgun/groupcache/v2 v2.2.1
 	github.com/multiformats/go-multihash v0.0.15
@@ -23,6 +22,6 @@ require (
 )
 
 replace (
-	github.com/ethereum/go-ethereum v1.10.11 => github.com/vulcanize/go-ethereum v0.0.0-20211120204023-ac6ef33f2ad1
-	github.com/vulcanize/ipfs-ethdb v0.0.5 => /Users/arijitdas/go/src/github.com/Vulcanize/ipfs-ethdb
+	github.com/ethereum/go-ethereum v1.10.11 => github.com/Vulcanize/go-ethereum v0.0.0-20211125055606-cd7c58e7f9a2
+	github.com/vulcanize/ipfs-ethdb v0.0.5 => github.com/Vulcanize/ipfs-ethdb v0.0.0-20211125060829-0aa16344859a
 )
