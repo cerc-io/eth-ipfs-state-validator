@@ -58,7 +58,7 @@ func NewPGIPFSValidator(db *sqlx.DB) *Validator {
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),
 		stateDatabase: state.NewDatabase(database),
-		db:            database,
+		db:            database.(*pgipfsethdb.Database),
 	}
 }
 
