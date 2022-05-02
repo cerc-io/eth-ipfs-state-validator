@@ -29,14 +29,14 @@ import (
 )
 
 // PublishRaw derives a cid from raw bytes and provided codec and multihash type, and writes it to the db tx
-func PublishRaw(tx *sqlx.Tx, codec, mh uint64, raw []byte) (string, error) {
+func PublishRaw(tx *sqlx.Tx, codec, mh uint64, raw []byte, blockNumber uint64) (string, error) {
 	c, err := RawdataToCid(codec, raw, mh)
 	if err != nil {
 		return "", err
 	}
 	dbKey := dshelp.MultihashToDsKey(c.Hash())
 	prefixedKey := blockstore.BlockPrefix.String() + dbKey.String()
-	_, err = tx.Exec(`INSERT INTO public.blocks (key, data) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, prefixedKey, raw)
+	_, err = tx.Exec(`INSERT INTO public.blocks (key, data, block_number) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, prefixedKey, raw, blockNumber)
 	return c.String(), err
 }
 
