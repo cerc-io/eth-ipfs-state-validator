@@ -31,7 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	validator "github.com/vulcanize/eth-ipfs-state-validator/v3/pkg"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v3/postgres"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
 )
 
 var (
