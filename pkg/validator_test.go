@@ -30,8 +30,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	validator "github.com/vulcanize/eth-ipfs-state-validator/pkg"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/postgres"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/v3/pkg"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v3/postgres"
 )
 
 var (
@@ -39,10 +39,10 @@ var (
 	slot0StorageValue = common.Hex2Bytes("94703c4b2bd70c169f5717101caee543299fc946c7")
 	slot1StorageValue = common.Hex2Bytes("01")
 	nullCodeHash      = crypto.Keccak256Hash([]byte{})
-	emptyRootNode, _  = rlp.EncodeToBytes([]byte{})
+	emptyRootNode, _  = rlp.EncodeToBytes(&[]byte{})
 	emptyContractRoot = crypto.Keccak256Hash(emptyRootNode)
 
-	stateBranchRootNode, _ = rlp.EncodeToBytes([]interface{}{
+	stateBranchRootNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		crypto.Keccak256(bankAccountLeafNode),
 		[]byte{},
 		[]byte{},
@@ -65,62 +65,62 @@ var (
 
 	mockCode           = []byte{1, 2, 3, 4, 5}
 	codeHash           = crypto.Keccak256Hash(mockCode)
-	contractAccount, _ = rlp.EncodeToBytes(types.StateAccount{
+	contractAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    1,
 		Balance:  big.NewInt(0),
 		CodeHash: codeHash.Bytes(),
 		Root:     crypto.Keccak256Hash(storageBranchRootNode),
 	})
-	contractAccountLeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	contractAccountLeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("3114658a74d9cc9f7acf2c5cd696c3494d7c344d78bfec3add0d91ec4e8d1c45"),
 		contractAccount,
 	})
 
-	minerAccount, _ = rlp.EncodeToBytes(types.StateAccount{
+	minerAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    0,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
-	minerAccountLeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	minerAccountLeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("3380c7b7ae81a58eb98d9c78de4a1fd7fd9535fc953ed2be602daaa41767312a"),
 		minerAccount,
 	})
 
-	account1, _ = rlp.EncodeToBytes(types.StateAccount{
+	account1, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    2,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
-	account1LeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	account1LeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("3926db69aaced518e9b9f0f434a473e7174109c943548bb8f23be41ca76d9ad2"),
 		account1,
 	})
 
-	account2, _ = rlp.EncodeToBytes(types.StateAccount{
+	account2, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    0,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
-	account2LeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	account2LeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("3957f3e2f04a0764c3a0491b175f69926da61efbcc8f61fa1455fd2d2b4cdd45"),
 		account2,
 	})
 
-	bankAccount, _ = rlp.EncodeToBytes(types.StateAccount{
+	bankAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    2,
 		Balance:  big.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
-	bankAccountLeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	bankAccountLeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("30bf49f440a1cd0527e4d06e2765654c0f56452257516d793a9b8d604dcfdf2a"),
 		bankAccount,
 	})
 
-	storageBranchRootNode, _ = rlp.EncodeToBytes([]interface{}{
+	storageBranchRootNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		[]byte{},
 		[]byte{},
 		crypto.Keccak256(slot0StorageLeafNode),
@@ -141,11 +141,11 @@ var (
 	})
 	storageRoot = crypto.Keccak256Hash(storageBranchRootNode)
 
-	slot0StorageLeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	slot0StorageLeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("390decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"),
 		slot0StorageValue,
 	})
-	slot1StorageLeafNode, _ = rlp.EncodeToBytes([]interface{}{
+	slot1StorageLeafNode, _ = rlp.EncodeToBytes(&[]interface{}{
 		common.Hex2Bytes("310e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"),
 		slot1StorageValue,
 	})
