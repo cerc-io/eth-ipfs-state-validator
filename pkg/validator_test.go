@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	validator "github.com/vulcanize/eth-ipfs-state-validator/v3/pkg"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/v4/pkg"
 	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
 )
 

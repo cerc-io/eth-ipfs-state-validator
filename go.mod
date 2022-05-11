@@ -1,4 +1,4 @@
-module github.com/vulcanize/eth-ipfs-state-validator/v3
+module github.com/vulcanize/eth-ipfs-state-validator/v4
 
 go 1.15
 
