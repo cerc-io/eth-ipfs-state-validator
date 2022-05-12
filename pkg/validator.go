@@ -28,8 +28,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mailgun/groupcache/v2"
 
-	ipfsethdb "github.com/vulcanize/ipfs-ethdb/v3"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v3/postgres"
+	ipfsethdb "github.com/vulcanize/ipfs-ethdb/v4"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS

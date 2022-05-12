@@ -30,11 +30,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	validator "github.com/vulcanize/eth-ipfs-state-validator/v3/pkg"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v3/postgres"
+	validator "github.com/vulcanize/eth-ipfs-state-validator/v4/pkg"
+	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
 )
 
 var (
+	blockNumber       = uint64(1)
 	contractAddr      = common.HexToAddress("0xaE9BEa628c4Ce503DcFD7E305CaB4e29E7476592")
 	slot0StorageValue = common.Hex2Bytes("94703c4b2bd70c169f5717101caee543299fc946c7")
 	slot1StorageValue = common.Hex2Bytes("01")
@@ -302,11 +303,11 @@ func loadTrie(stateNodes, storageNodes [][]byte) {
 	tx, err := db.Beginx()
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node)
+		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node)
+		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	err = tx.Commit()

@@ -1,4 +1,4 @@
-module github.com/vulcanize/eth-ipfs-state-validator/v3
+module github.com/vulcanize/eth-ipfs-state-validator/v4
 
 go 1.15
 
@@ -19,5 +19,5 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/vulcanize/ipfs-ethdb/v3 v3.0.1
+	github.com/vulcanize/ipfs-ethdb/v4 v4.0.0-alpha
 )
