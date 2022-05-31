@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/vulcanize/ipfs-ethdb/v3 v3.0.2
+	github.com/vulcanize/ipfs-ethdb/v3 v3.0.3
 )
 
 require (
