@@ -3,7 +3,7 @@ module github.com/vulcanize/eth-ipfs-state-validator/v4
 go 1.18
 
 require (
-	github.com/ethereum/go-ethereum v1.10.18
+	github.com/ethereum/go-ethereum v1.10.19
 	github.com/ipfs/go-blockservice v0.1.7
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-ipfs v0.10.0
@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/vulcanize/ipfs-ethdb/v4 v4.0.1-alpha
+	github.com/vulcanize/ipfs-ethdb/v4 v4.0.2-alpha
 )
 
 require (
