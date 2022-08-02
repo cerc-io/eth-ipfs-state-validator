@@ -23,8 +23,8 @@ import (
 	"github.com/ipfs/go-cid"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	dshelp "github.com/ipfs/go-ipfs-ds-help"
-	"github.com/ipfs/go-ipfs/core"
-	"github.com/ipfs/go-ipfs/repo/fsrepo"
+	"github.com/ipfs/kubo/core"
+	"github.com/ipfs/kubo/repo/fsrepo"
 	"github.com/jmoiron/sqlx"
 )
 
