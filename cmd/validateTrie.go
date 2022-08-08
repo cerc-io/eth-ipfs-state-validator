@@ -59,7 +59,8 @@ It can operate at three levels:
 }
 
 func validateTrie() {
-	v, err := newValidator()
+	numWorkers := viper.GetUint("validator.workers")
+	v, err := newValidator(numWorkers)
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
@@ -104,20 +105,20 @@ func validateTrie() {
 	logWithCommand.Debugf("groupcache stats %+v", stats)
 }
 
-func newValidator() (*validator.Validator, error) {
+func newValidator(workers uint) (*validator.Validator, error) {
 	ipfsPath := viper.GetString("ipfs.path")
 	if ipfsPath == "" {
 		db, err := validator.NewDB()
 		if err != nil {
 			logWithCommand.Fatal(err)
 		}
-		return validator.NewPGIPFSValidator(db), nil
+		return validator.NewPGIPFSValidator(db, workers), nil
 	}
 	bs, err := validator.InitIPFSBlockService(ipfsPath)
 	if err != nil {
 		return nil, err
 	}
-	return validator.NewIPFSValidator(bs), nil
+	return validator.NewIPFSValidator(bs, workers), nil
 }
 
 func init() {
@@ -128,10 +129,12 @@ func init() {
 	validateTrieCmd.PersistentFlags().String("storage-root", "", "Root of the storage trie we wish to validate; for storage validation")
 	validateTrieCmd.PersistentFlags().String("address", "", "Contract address for the storage trie we wish to validate; for storage validation")
 	validateTrieCmd.PersistentFlags().String("ipfs-path", "", "Path to IPFS repository; if provided operations move through the IPFS repo otherwise Postgres connection params are expected in the provided config")
+	validateTrieCmd.PersistentFlags().Int("workers", 4, "number of concurrent workers to use")
 
 	viper.BindPFlag("validator.stateRoot", validateTrieCmd.PersistentFlags().Lookup("state-root"))
 	viper.BindPFlag("validator.type", validateTrieCmd.PersistentFlags().Lookup("type"))
 	viper.BindPFlag("validator.storageRoot", validateTrieCmd.PersistentFlags().Lookup("storage-root"))
 	viper.BindPFlag("validator.address", validateTrieCmd.PersistentFlags().Lookup("address"))
+	viper.BindPFlag("validator.workers", validateTrieCmd.PersistentFlags().Lookup("workers"))
 	viper.BindPFlag("ipfs.path", validateTrieCmd.PersistentFlags().Lookup("ipfs-path"))
 }
