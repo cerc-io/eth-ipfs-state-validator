@@ -241,5 +241,3 @@ require (
 )
 
 replace github.com/ethereum/go-ethereum v1.10.21 => github.com/vulcanize/go-ethereum v1.10.21-statediff-4.1.2-alpha
-
-replace github.com/vulcanize/ipfs-ethdb/v4 => ../ipfs-ethdb
