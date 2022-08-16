@@ -200,7 +200,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
 		db, err = pgipfsethdb.TestDB()
 		Expect(err).ToNot(HaveOccurred())
-		v = validator.NewPGIPFSValidator(db)
+		v = validator.NewPGIPFSValidator(db, 4)
 	})
 	AfterEach(func() {
 		v.Close()
