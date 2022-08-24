@@ -1526,6 +1526,14 @@ github.com/urfave/cli v1.22.2/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtX
 github.com/urfave/cli/v2 v2.0.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
+github.com/vulcanize/go-eth-state-node-iterator v1.1.4 h1:2jIbgZ/yxrNZt5zmsXtvUPSxT0sP5k1PR5/O1GN/Ma0=
+github.com/vulcanize/go-eth-state-node-iterator v1.1.4/go.mod h1:kFzlSi7rUB9mJWZf08xIEiiGuXnnUEn48It+WMHzxPc=
+github.com/vulcanize/go-eth-state-node-iterator v1.1.6 h1:z909Ctm0wnyR8A18uK3TUXGsmTMWfFl67Bn24uGTaWU=
+github.com/vulcanize/go-eth-state-node-iterator v1.1.6/go.mod h1:WufEmytGuRrrxRDX48wJwQk8vaVGkqXk7hvCxbs7hQ0=
+github.com/vulcanize/go-ethereum v1.10.23-statediff-4.2.0-alpha h1:iy1uhdazPIlUJcCu6Kal+hFQiZblTDwSe2i644o167Y=
+github.com/vulcanize/go-ethereum v1.10.23-statediff-4.2.0-alpha/go.mod h1:lKBVBWksSwBDR/5D9CAxaGQzDPIS3ueWb6idy7X1Shg=
+github.com/vulcanize/ipfs-ethdb/v4 v4.0.7-alpha h1:UdOYaVmK/QaFyUDg44eEcEaNivP6059hmK6Qeh+3Mg8=
+github.com/vulcanize/ipfs-ethdb/v4 v4.0.7-alpha/go.mod h1:gK23M2S0428yKsJoiUzBMTMVRt6OdOuFEFPcnO/ksGA=
 github.com/wI2L/jsondiff v0.2.0 h1:dE00WemBa1uCjrzQUUTE/17I6m5qAaN0EMFOg2Ynr/k=
 github.com/wI2L/jsondiff v0.2.0/go.mod h1:axTcwtBkY4TsKuV+RgoMhHyHKKFRI6nnjRLi8LLYQnA=
 github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30/go.mod h1:YkocrP2K2tcw938x9gCOmT5G5eCD6jsTz0SZuyAqwIE=

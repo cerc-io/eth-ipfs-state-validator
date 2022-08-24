@@ -20,6 +20,8 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
+	github.com/vulcanize/go-eth-state-node-iterator v1.1.6
+	github.com/vulcanize/ipfs-ethdb/v4 v4.0.7-alpha
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
