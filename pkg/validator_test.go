@@ -19,6 +19,8 @@ package validator_test
 import (
 	"fmt"
 	"math/big"
+	"os"
+	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -194,15 +196,20 @@ var (
 	v   *validator.Validator
 	db  *sqlx.DB
 	err error
+	tmp string
 )
 
 var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
 		db, err = pgipfsethdb.TestDB()
 		Expect(err).ToNot(HaveOccurred())
-		v = validator.NewPGIPFSValidator(db, 4)
+		tmp, err = os.MkdirTemp("", "test_validator")
+		Expect(err).ToNot(HaveOccurred())
+		params := validator.Params{Workers: 4, RecoveryFormat: filepath.Join(tmp, "recover_%s")}
+		v = validator.NewPGIPFSValidator(db, params)
 	})
 	AfterEach(func() {
+		os.RemoveAll(tmp)
 		v.Close()
 	})
 	Describe("ValidateTrie", func() {
@@ -210,7 +217,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = validator.ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
-		It("Returns an error the state root node is missing", func() {
+		It("Returns an error if the state root node is missing", func() {
 			// we write code to ethdb, there should probably be an EthCode IPLD codec
 			// but there isn't, and we don't need one here since blockstore keys are mh-derived
 			loadTrie(append(missingRootStateNodes, mockCode), trieStorageNodes)

@@ -59,15 +59,19 @@ It can operate at three levels:
 }
 
 func validateTrie() {
-	numWorkers := viper.GetUint("validator.workers")
-	v, err := newValidator(numWorkers)
+	params := validator.Params{
+		Workers:        viper.GetUint("validator.workers"),
+		RecoveryFormat: viper.GetString("validator.recoveryFormat"),
+	}
+	v, err := newValidator(params)
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
 	stateRootStr := viper.GetString("validator.stateRoot")
 	storageRootStr := viper.GetString("validator.storageRoot")
 	contractAddrStr := viper.GetString("validator.address")
-	switch strings.ToLower(viper.GetString("validator.type")) {
+	traversal := strings.ToLower(viper.GetString("validator.type"))
+	switch traversal {
 	case "f", "full":
 		if stateRootStr == "" {
 			logWithCommand.Fatal("must provide a state root for full state validation")
@@ -99,26 +103,28 @@ func validateTrie() {
 			logWithCommand.Fatalf("Storage trie for contract %s and root %s not complete\r\nerr: %v", addr.String(), storageRoot.String(), err)
 		}
 		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr.String(), storageRoot.String())
+	default:
+		logWithCommand.Fatalf("Invalid traversal level: '%s'", traversal)
 	}
 
 	stats := v.GetCacheStats()
 	logWithCommand.Debugf("groupcache stats %+v", stats)
 }
 
-func newValidator(workers uint) (*validator.Validator, error) {
+func newValidator(params validator.Params) (*validator.Validator, error) {
 	ipfsPath := viper.GetString("ipfs.path")
 	if ipfsPath == "" {
 		db, err := validator.NewDB()
 		if err != nil {
 			logWithCommand.Fatal(err)
 		}
-		return validator.NewPGIPFSValidator(db, workers), nil
+		return validator.NewPGIPFSValidator(db, params), nil
 	}
 	bs, err := validator.InitIPFSBlockService(ipfsPath)
 	if err != nil {
 		return nil, err
 	}
-	return validator.NewIPFSValidator(bs, workers), nil
+	return validator.NewIPFSValidator(bs, params), nil
 }
 
 func init() {
@@ -130,11 +136,13 @@ func init() {
 	validateTrieCmd.PersistentFlags().String("address", "", "Contract address for the storage trie we wish to validate; for storage validation")
 	validateTrieCmd.PersistentFlags().String("ipfs-path", "", "Path to IPFS repository; if provided operations move through the IPFS repo otherwise Postgres connection params are expected in the provided config")
 	validateTrieCmd.PersistentFlags().Int("workers", 4, "number of concurrent workers to use")
+	validateTrieCmd.PersistentFlags().String("recovery-format", validator.DefaultRecoveryFormat, "format pattern for recovery files")
 
 	viper.BindPFlag("validator.stateRoot", validateTrieCmd.PersistentFlags().Lookup("state-root"))
 	viper.BindPFlag("validator.type", validateTrieCmd.PersistentFlags().Lookup("type"))
 	viper.BindPFlag("validator.storageRoot", validateTrieCmd.PersistentFlags().Lookup("storage-root"))
 	viper.BindPFlag("validator.address", validateTrieCmd.PersistentFlags().Lookup("address"))
 	viper.BindPFlag("validator.workers", validateTrieCmd.PersistentFlags().Lookup("workers"))
+	viper.BindPFlag("validator.recoveryFormat", validateTrieCmd.PersistentFlags().Lookup("recovery-format"))
 	viper.BindPFlag("ipfs.path", validateTrieCmd.PersistentFlags().Lookup("ipfs-path"))
 }
