@@ -68,6 +68,7 @@ var (
 
 	mockCode           = []byte{1, 2, 3, 4, 5}
 	codeHash           = crypto.Keccak256Hash(mockCode)
+	codePath           = common.Hex2Bytes("6114658a74d9cc9f7acf2c5cd696c3494d7c344d78bfec3add0d91ec4e8d1c45")
 	contractAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    1,
 		Balance:  big.NewInt(0),
@@ -190,6 +191,9 @@ var (
 		storageBranchRootNode,
 		slot1StorageLeafNode,
 	}
+
+	missingStateNodePath   = common.Hex2Bytes("0e")
+	missingStorageNodePath = common.Hex2Bytes("02")
 )
 
 var (
@@ -236,19 +240,25 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			pathSubStr := fmt.Sprintf("path %x", missingStateNodePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns an error if the storage trie is missing node(s)", func() {
 			loadTrie(append(trieStateNodes, mockCode), missingNodeStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			pathSubStr := fmt.Sprintf("path %x", missingStorageNodePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns an error if contract code is missing", func() {
 			loadTrie(trieStateNodes, trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
-			subStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
-			Expect(err.Error()).To(ContainSubstring(subStr))
+			codeSubStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
+			Expect(err.Error()).To(ContainSubstring(codeSubStr))
+			pathSubStr := fmt.Sprintf("path %x", codePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns no error if the entire state (state trie and storage tries) can be validated", func() {
 			loadTrie(append(trieStateNodes, mockCode), trieStorageNodes)
