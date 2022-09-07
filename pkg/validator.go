@@ -18,8 +18,8 @@ package validator
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -32,8 +32,11 @@ import (
 	"github.com/ipfs/go-blockservice"
 	"github.com/jmoiron/sqlx"
 	"github.com/mailgun/groupcache/v2"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	nodeiter "github.com/vulcanize/go-eth-state-node-iterator"
+	"github.com/vulcanize/go-eth-state-node-iterator/tracker"
 	ipfsethdb "github.com/vulcanize/ipfs-ethdb/v4"
 	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
 )
@@ -45,13 +48,21 @@ type Validator struct {
 	stateDatabase state.Database
 	db            *pgipfsethdb.Database
 
-	iterWorkers uint
+	params Params
 }
 
-var emptyCodeHash = crypto.Keccak256(nil)
+type Params struct {
+	Workers        uint
+	RecoveryFormat string // %s substituted with traversal type
+}
+
+var (
+	DefaultRecoveryFormat = "./recover_validate_%s"
+	emptyCodeHash         = crypto.Keccak256(nil)
+)
 
 // NewPGIPFSValidator returns a new trie validator ontop of a connection pool for an IPFS backing Postgres database
-func NewPGIPFSValidator(db *sqlx.DB, workers uint) *Validator {
+func NewPGIPFSValidator(db *sqlx.DB, par Params) *Validator {
 	kvs := pgipfsethdb.NewKeyValueStore(db, pgipfsethdb.CacheConfig{
 		Name:           "kv",
 		Size:           16 * 1000 * 1000, // 16MB
@@ -64,15 +75,13 @@ func NewPGIPFSValidator(db *sqlx.DB, workers uint) *Validator {
 		ExpiryDuration: time.Hour * 8,    // 8 hours
 	})
 
-	if workers == 0 {
-		workers = 1
-	}
+	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),
 		stateDatabase: state.NewDatabase(database),
 		db:            database.(*pgipfsethdb.Database),
-		iterWorkers:   workers,
+		params:        par,
 	}
 }
 
@@ -81,17 +90,15 @@ func (v *Validator) GetCacheStats() groupcache.Stats {
 }
 
 // NewIPFSValidator returns a new trie validator ontop of an IPFS blockservice
-func NewIPFSValidator(bs blockservice.BlockService, workers uint) *Validator {
+func NewIPFSValidator(bs blockservice.BlockService, par Params) *Validator {
 	kvs := ipfsethdb.NewKeyValueStore(bs)
 	database := ipfsethdb.NewDatabase(bs)
-	if workers == 0 {
-		workers = 1
-	}
+	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
 		trieDB:        trie.NewDatabase(kvs),
 		stateDatabase: state.NewDatabase(database),
-		iterWorkers:   workers,
+		params:        par,
 	}
 }
 
@@ -106,71 +113,14 @@ func NewValidator(kvs ethdb.KeyValueStore, database ethdb.Database) *Validator {
 	}
 }
 
-// Traverses each iterator in a separate goroutine.
-// If storage = true, also traverse storage tries for each leaf.
-func (v *Validator) iterateAsync(iters []trie.NodeIterator, storage bool) error {
-	var wg sync.WaitGroup
-	errors := make(chan error)
-	for _, it := range iters {
-		wg.Add(1)
-		go func(it trie.NodeIterator) {
-			defer wg.Done()
-			for it.Next(true) {
-				// Iterate through entire state trie. it.Next() will return false when we have
-				// either completed iteration of the entire trie or run into an error (e.g. a
-				// missing node). If we are able to iterate through the entire trie without error
-				// then the trie is complete.
-
-				// If storage is not requested, or the state trie node is an internal entry, leave as is
-				if !storage || !it.Leaf() {
-					continue
-				}
-				// Otherwise we've reached an account node, initiate data iteration
-				var account types.StateAccount
-				if err := rlp.Decode(bytes.NewReader(it.LeafBlob()), &account); err != nil {
-					errors <- err
-					break
-				}
-				dataTrie, err := v.stateDatabase.OpenStorageTrie(common.BytesToHash(it.LeafKey()), account.Root)
-				if err != nil {
-					errors <- err
-					break
-				}
-				dataIt := dataTrie.NodeIterator(nil)
-				if !bytes.Equal(account.CodeHash, emptyCodeHash) {
-					addrHash := common.BytesToHash(it.LeafKey())
-					_, err := v.stateDatabase.ContractCode(addrHash, common.BytesToHash(account.CodeHash))
-					if err != nil {
-						errors <- fmt.Errorf("code %x: %v", account.CodeHash, err)
-						break
-					}
-				}
-				for dataIt.Next(true) {
-				}
-				if err = dataIt.Error(); err != nil {
-					errors <- err
-					break
-				}
-
-			}
-			if it.Error() != nil {
-				errors <- it.Error()
-			}
-		}(it)
+// Ensure params are valid
+func normalizeParams(p *Params) {
+	if p.Workers == 0 {
+		p.Workers = 1
 	}
-
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		done <- struct{}{}
-	}()
-	var err error
-	select {
-	case err = <-errors:
-	case <-done:
-		close(errors)
+	if len(p.RecoveryFormat) == 0 {
+		p.RecoveryFormat = DefaultRecoveryFormat
 	}
-	return err
 }
 
 // ValidateTrie returns an error if the state and storage tries for the provided state root cannot be confirmed as complete
@@ -180,8 +130,8 @@ func (v *Validator) ValidateTrie(stateRoot common.Hash) error {
 	if err != nil {
 		return err
 	}
-	iters := nodeiter.SubtrieIterators(t, v.iterWorkers)
-	return v.iterateAsync(iters, true)
+	iterate := func(it trie.NodeIterator) error { return v.iterate(it, true) }
+	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, fullTraversal), v.params.Workers, iterate)
 }
 
 // ValidateStateTrie returns an error if the state trie for the provided state root cannot be confirmed as complete
@@ -192,8 +142,8 @@ func (v *Validator) ValidateStateTrie(stateRoot common.Hash) error {
 	if err != nil {
 		return err
 	}
-	iters := nodeiter.SubtrieIterators(t, v.iterWorkers)
-	return v.iterateAsync(iters, false)
+	iterate := func(it trie.NodeIterator) error { return v.iterate(it, false) }
+	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, stateTraversal), v.params.Workers, iterate)
 }
 
 // ValidateStorageTrie returns an error if the storage trie for the provided storage root and contract address cannot be confirmed as complete
@@ -204,8 +154,8 @@ func (v *Validator) ValidateStorageTrie(address common.Address, storageRoot comm
 	if err != nil {
 		return err
 	}
-	iters := nodeiter.SubtrieIterators(t, v.iterWorkers)
-	return v.iterateAsync(iters, false)
+	iterate := func(it trie.NodeIterator) error { return v.iterate(it, false) }
+	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, storageTraversal), v.params.Workers, iterate)
 }
 
 // Close implements io.Closer
@@ -214,4 +164,80 @@ func (v *Validator) Close() error {
 	groupcache.DeregisterGroup("kv")
 	groupcache.DeregisterGroup("db")
 	return nil
+}
+
+// Traverses each iterator in a separate goroutine.
+// If storage = true, also traverse storage tries for each leaf.
+func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
+	// Iterate through entire state trie. it.Next() will return false when we have
+	// either completed iteration of the entire trie or run into an error (e.g. a
+	// missing node). If we are able to iterate through the entire trie without error
+	// then the trie is complete.
+	for it.Next(true) {
+		// This block adapted from geth - core/state/iterator.go
+		// If storage is not requested, or the state trie node is an internal entry, skip
+		if !storage || !it.Leaf() {
+			continue
+		}
+		// Otherwise we've reached an account node, initiate data iteration
+		var account types.StateAccount
+		if err := rlp.Decode(bytes.NewReader(it.LeafBlob()), &account); err != nil {
+			return err
+		}
+		dataTrie, err := v.stateDatabase.OpenStorageTrie(common.BytesToHash(it.LeafKey()), account.Root)
+		if err != nil {
+			return err
+		}
+		dataIt := dataTrie.NodeIterator(nil)
+		if !bytes.Equal(account.CodeHash, emptyCodeHash) {
+			addrHash := common.BytesToHash(it.LeafKey())
+			_, err := v.stateDatabase.ContractCode(addrHash, common.BytesToHash(account.CodeHash))
+			if err != nil {
+				return fmt.Errorf("code %x: %v", account.CodeHash, err)
+			}
+		}
+		for dataIt.Next(true) {
+		}
+		if dataIt.Error() != nil {
+			return dataIt.Error()
+		}
+	}
+	return it.Error()
+}
+
+func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn func(trie.NodeIterator) error) error {
+	ctx, cancelCtx := context.WithCancel(context.Background())
+	tracker := tracker.New(recoveryFile, iterCount)
+	tracker.CaptureSignal(cancelCtx)
+	halt := func() {
+		if err := tracker.HaltAndDump(); err != nil {
+			log.Errorf("failed to write recovery file: %v", err)
+		}
+	}
+
+	// attempt to restore from recovery file if it exists
+	iters, err := tracker.Restore(tree)
+	if err != nil {
+		return err
+	}
+	if iterCount < uint(len(iters)) {
+		return fmt.Errorf("recovered too many iterators: got %d, expected %d", len(iters), iterCount)
+	}
+
+	if iters == nil { // nothing restored
+		iters = nodeiter.SubtrieIterators(tree, iterCount)
+		for i, it := range iters {
+			iters[i] = tracker.Tracked(it, nil)
+		}
+	}
+
+	g, ctx := errgroup.WithContext(ctx)
+	defer halt()
+
+	for _, it := range iters {
+		func(it trie.NodeIterator) {
+			g.Go(func() error { return fn(it) })
+		}(it)
+	}
+	return g.Wait()
 }
