@@ -1,4 +1,4 @@
-module github.com/vulcanize/eth-ipfs-state-validator/v4
+module github.com/cerc-io/eth-ipfs-state-validator/v4
 
 go 1.18
 
@@ -18,8 +18,8 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/vulcanize/go-eth-state-node-iterator v1.1.6
-	github.com/vulcanize/ipfs-ethdb/v4 v4.0.5-alpha
+	github.com/cerc-io/go-eth-state-node-iterator v1.1.7
+	github.com/cerc-io/ipfs-ethdb/v4 v4.0.6-alpha
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
@@ -236,4 +236,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.10.23 => github.com/vulcanize/go-ethereum v1.10.23-statediff-4.2.0-alpha
+replace github.com/ethereum/go-ethereum v1.10.23 => github.com/cerc-io/go-ethereum v1.10.23-statediff-4.2.0-alpha
