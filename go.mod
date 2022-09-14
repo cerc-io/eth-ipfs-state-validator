@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/cerc-io/go-eth-state-node-iterator v1.1.7
-	github.com/cerc-io/ipfs-ethdb/v4 v4.0.6-alpha
+	github.com/cerc-io/ipfs-ethdb/v4 v4.0.8-alpha
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
