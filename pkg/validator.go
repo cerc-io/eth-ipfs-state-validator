@@ -35,10 +35,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	nodeiter "github.com/vulcanize/go-eth-state-node-iterator"
-	"github.com/vulcanize/go-eth-state-node-iterator/tracker"
-	ipfsethdb "github.com/vulcanize/ipfs-ethdb/v4"
-	pgipfsethdb "github.com/vulcanize/ipfs-ethdb/v4/postgres"
+	nodeiter "github.com/cerc-io/go-eth-state-node-iterator"
+	"github.com/cerc-io/go-eth-state-node-iterator/tracker"
+	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v4"
+	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v4/postgres"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS

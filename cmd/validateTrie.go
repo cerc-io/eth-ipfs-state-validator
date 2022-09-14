@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	validator "github.com/vulcanize/eth-ipfs-state-validator/v4/pkg"
+	validator "github.com/cerc-io/eth-ipfs-state-validator/v4/pkg"
 )
 
 // validateTrieCmd represents the validateTrie command

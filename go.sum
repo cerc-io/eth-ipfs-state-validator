@@ -132,6 +132,12 @@ github.com/cenkalti/backoff/v4 v4.1.3 h1:cFAlzYUlVYDysBEH2T5hyJZMh3+5+WCBvSnK6Q8
 github.com/cenkalti/backoff/v4 v4.1.3/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/ceramicnetwork/go-dag-jose v0.1.0 h1:yJ/HVlfKpnD3LdYP03AHyTvbm3BpPiz2oZiOeReJRdU=
+github.com/cerc-io/go-eth-state-node-iterator v1.1.7 h1:i4zCKkfowJ4aUVpqVyMpOZIbD5WVm/iijhMAPgcLJ44=
+github.com/cerc-io/go-eth-state-node-iterator v1.1.7/go.mod h1:BBh4BetpBoHUbAiKAdatR3ij7IzDlgN9nPzZ7snn/lo=
+github.com/cerc-io/go-ethereum v1.10.23-statediff-4.2.0-alpha h1:Na4mum/Qkw1mRHnq/TIRPIF5exZAEBznVs3G3/YSENo=
+github.com/cerc-io/go-ethereum v1.10.23-statediff-4.2.0-alpha/go.mod h1:lKBVBWksSwBDR/5D9CAxaGQzDPIS3ueWb6idy7X1Shg=
+github.com/cerc-io/ipfs-ethdb/v4 v4.0.8-alpha h1:+05O+US8WosZO9RP3i1j9B0QpBYwg9SlhJeBdRBgzgA=
+github.com/cerc-io/ipfs-ethdb/v4 v4.0.8-alpha/go.mod h1:3zlBgkDTgSLlgMgY8BttUzQxxVAzZQ1jZUH4qaP09Pc=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
@@ -1397,8 +1403,6 @@ github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6L
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBOAvL+k=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
-github.com/roysc/go-eth-state-node-iterator v0.0.1-alpha.0.20220825012218-c991d5a96e0f h1:DQCNcq5KRb6c0t/tnOZRwk9H6NdkNJFLZ6BXhs506Bo=
-github.com/roysc/go-eth-state-node-iterator v0.0.1-alpha.0.20220825012218-c991d5a96e0f/go.mod h1:MXuwoa7yPL6wUgPa6Bh1qQveiYaNcLiqRE6e03dDPeo=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.21.0/go.mod h1:ZPhntP/xmq1nnND05hhpAh2QMhSsA4UN3MGZ6O2J3hM=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
@@ -1522,12 +1526,6 @@ github.com/urfave/cli v1.22.2/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtX
 github.com/urfave/cli/v2 v2.0.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
-github.com/vulcanize/go-eth-state-node-iterator v1.1.4 h1:2jIbgZ/yxrNZt5zmsXtvUPSxT0sP5k1PR5/O1GN/Ma0=
-github.com/vulcanize/go-eth-state-node-iterator v1.1.4/go.mod h1:kFzlSi7rUB9mJWZf08xIEiiGuXnnUEn48It+WMHzxPc=
-github.com/vulcanize/go-ethereum v1.10.23-statediff-4.2.0-alpha h1:iy1uhdazPIlUJcCu6Kal+hFQiZblTDwSe2i644o167Y=
-github.com/vulcanize/go-ethereum v1.10.23-statediff-4.2.0-alpha/go.mod h1:lKBVBWksSwBDR/5D9CAxaGQzDPIS3ueWb6idy7X1Shg=
-github.com/vulcanize/ipfs-ethdb/v4 v4.0.7-alpha h1:UdOYaVmK/QaFyUDg44eEcEaNivP6059hmK6Qeh+3Mg8=
-github.com/vulcanize/ipfs-ethdb/v4 v4.0.7-alpha/go.mod h1:gK23M2S0428yKsJoiUzBMTMVRt6OdOuFEFPcnO/ksGA=
 github.com/wI2L/jsondiff v0.2.0 h1:dE00WemBa1uCjrzQUUTE/17I6m5qAaN0EMFOg2Ynr/k=
 github.com/wI2L/jsondiff v0.2.0/go.mod h1:axTcwtBkY4TsKuV+RgoMhHyHKKFRI6nnjRLi8LLYQnA=
 github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30/go.mod h1:YkocrP2K2tcw938x9gCOmT5G5eCD6jsTz0SZuyAqwIE=
