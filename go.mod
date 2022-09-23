@@ -3,9 +3,9 @@ module github.com/cerc-io/eth-ipfs-state-validator/v4
 go 1.18
 
 require (
-	github.com/cerc-io/go-eth-state-node-iterator v1.1.7
-	github.com/cerc-io/ipfs-ethdb/v4 v4.0.8-alpha
-	github.com/ethereum/go-ethereum v1.10.23
+	github.com/cerc-io/go-eth-state-node-iterator v1.1.8
+	github.com/cerc-io/ipfs-ethdb/v4 v4.0.9-alpha
+	github.com/ethereum/go-ethereum v1.10.25
 	github.com/ipfs/go-blockservice v0.4.0
 	github.com/ipfs/go-cid v0.2.0
 	github.com/ipfs/go-ipfs-blockstore v1.2.0
@@ -236,4 +236,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.10.23 => github.com/cerc-io/go-ethereum v1.10.23-statediff-4.2.0-alpha
+replace github.com/ethereum/go-ethereum v1.10.25 => github.com/cerc-io/go-ethereum v1.10.25-statediff-4.2.1-alpha
