@@ -23,7 +23,7 @@ jobs:
 
     - name : Bring up docker DB containers
       run: docker compose up -d
-    
+
     - name: Run test
       run: |
         sleep 30;
