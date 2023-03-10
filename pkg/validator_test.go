@@ -33,7 +33,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	validator "github.com/cerc-io/eth-ipfs-state-validator/v4/pkg"
-	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v4/postgres"
 )
 
 var (
@@ -201,11 +200,21 @@ var (
 	db  *sqlx.DB
 	err error
 	tmp string
+
+	config = validator.Config{
+		Hostname: "localhost",
+		Name:     "cerc_testing",
+		User:     "vdbm",
+		Password: "password",
+		Port:     8077,
+	}
 )
 
 var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
-		db, err = pgipfsethdb.TestDB()
+		err = validator.LoadEnv(&config)
+		Expect(err).ToNot(HaveOccurred())
+		db, err = sqlx.Connect("postgres", config.ConnString())
 		Expect(err).ToNot(HaveOccurred())
 		tmp, err = os.MkdirTemp("", "test_validator")
 		Expect(err).ToNot(HaveOccurred())
@@ -218,7 +227,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error if the state root node is missing", func() {
@@ -269,7 +278,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
@@ -293,7 +302,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStorageTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the storage root node is missing", func() {
@@ -320,11 +329,11 @@ func loadTrie(stateNodes, storageNodes [][]byte) {
 	tx, err := db.Beginx()
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	err = tx.Commit()
