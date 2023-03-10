@@ -18,6 +18,8 @@ package validator
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
@@ -32,19 +34,19 @@ const (
 	DATABASE_PASSWORD = "DATABASE_PASSWORD"
 )
 
-// NewDB returns a new sqlx.DB from config/cli/env variables
-func NewDB() (*sqlx.DB, error) {
-	c := Config{}
-	c.Init()
-	return sqlx.Connect("postgres", c.ConnString())
-}
-
 type Config struct {
 	Hostname string
 	Name     string
 	User     string
 	Password string
 	Port     int
+}
+
+// NewDB returns a new sqlx.DB from config/cli/env variables
+func NewDB() (*sqlx.DB, error) {
+	c := Config{}
+	LoadViper(&c)
+	return sqlx.Connect("postgres", c.ConnString())
 }
 
 func (c *Config) ConnString() string {
@@ -59,7 +61,30 @@ func (c *Config) ConnString() string {
 	return fmt.Sprintf("postgresql://%s:%d/%s?sslmode=disable", c.Hostname, c.Port, c.Name)
 }
 
-func (c *Config) Init() {
+func LoadEnv(c *Config) error {
+	if val := os.Getenv(DATABASE_NAME); val != "" {
+		c.Name = val
+	}
+	if val := os.Getenv(DATABASE_HOSTNAME); val != "" {
+		c.Hostname = val
+	}
+	if val := os.Getenv(DATABASE_PORT); val != "" {
+		port, err := strconv.Atoi(val)
+		if err != nil {
+			return err
+		}
+		c.Port = port
+	}
+	if val := os.Getenv(DATABASE_USER); val != "" {
+		c.User = val
+	}
+	if val := os.Getenv(DATABASE_PASSWORD); val != "" {
+		c.Password = val
+	}
+	return nil
+}
+
+func LoadViper(c *Config) {
 	viper.BindEnv("database.name", DATABASE_NAME)
 	viper.BindEnv("database.hostname", DATABASE_HOSTNAME)
 	viper.BindEnv("database.port", DATABASE_PORT)

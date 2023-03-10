@@ -33,7 +33,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	validator "github.com/cerc-io/eth-ipfs-state-validator/v4/pkg"
-	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v4/postgres"
 )
 
 var (
@@ -68,6 +67,7 @@ var (
 
 	mockCode           = []byte{1, 2, 3, 4, 5}
 	codeHash           = crypto.Keccak256Hash(mockCode)
+	codePath           = common.Hex2Bytes("6114658a74d9cc9f7acf2c5cd696c3494d7c344d78bfec3add0d91ec4e8d1c45")
 	contractAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    1,
 		Balance:  big.NewInt(0),
@@ -190,6 +190,9 @@ var (
 		storageBranchRootNode,
 		slot1StorageLeafNode,
 	}
+
+	missingStateNodePath   = common.Hex2Bytes("0e")
+	missingStorageNodePath = common.Hex2Bytes("02")
 )
 
 var (
@@ -197,11 +200,21 @@ var (
 	db  *sqlx.DB
 	err error
 	tmp string
+
+	config = validator.Config{
+		Hostname: "localhost",
+		Name:     "cerc_testing",
+		User:     "vdbm",
+		Password: "password",
+		Port:     8077,
+	}
 )
 
 var _ = Describe("PG-IPFS Validator", func() {
 	BeforeEach(func() {
-		db, err = pgipfsethdb.TestDB()
+		err = validator.LoadEnv(&config)
+		Expect(err).ToNot(HaveOccurred())
+		db, err = sqlx.Connect("postgres", config.ConnString())
 		Expect(err).ToNot(HaveOccurred())
 		tmp, err = os.MkdirTemp("", "test_validator")
 		Expect(err).ToNot(HaveOccurred())
@@ -211,10 +224,11 @@ var _ = Describe("PG-IPFS Validator", func() {
 	AfterEach(func() {
 		os.RemoveAll(tmp)
 		v.Close()
+		db.Close()
 	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error if the state root node is missing", func() {
@@ -236,19 +250,25 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			pathSubStr := fmt.Sprintf("path %x", missingStateNodePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns an error if the storage trie is missing node(s)", func() {
 			loadTrie(append(trieStateNodes, mockCode), missingNodeStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			pathSubStr := fmt.Sprintf("path %x", missingStorageNodePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns an error if contract code is missing", func() {
 			loadTrie(trieStateNodes, trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
-			subStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
-			Expect(err.Error()).To(ContainSubstring(subStr))
+			codeSubStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
+			Expect(err.Error()).To(ContainSubstring(codeSubStr))
+			pathSubStr := fmt.Sprintf("path %x", codePath)
+			Expect(err.Error()).To(ContainSubstring(pathSubStr))
 		})
 		It("Returns no error if the entire state (state trie and storage tries) can be validated", func() {
 			loadTrie(append(trieStateNodes, mockCode), trieStorageNodes)
@@ -259,7 +279,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
@@ -283,7 +303,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStorageTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the storage root node is missing", func() {
@@ -310,11 +330,11 @@ func loadTrie(stateNodes, storageNodes [][]byte) {
 	tx, err := db.Beginx()
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	err = tx.Commit()

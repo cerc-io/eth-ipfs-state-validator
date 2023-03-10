@@ -166,7 +166,7 @@ func (v *Validator) Close() error {
 	return nil
 }
 
-// Traverses each iterator in a separate goroutine.
+// Traverses one iterator fully
 // If storage = true, also traverse storage tries for each leaf.
 func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 	// Iterate through entire state trie. it.Next() will return false when we have
@@ -193,18 +193,20 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 			addrHash := common.BytesToHash(it.LeafKey())
 			_, err := v.stateDatabase.ContractCode(addrHash, common.BytesToHash(account.CodeHash))
 			if err != nil {
-				return fmt.Errorf("code %x: %v", account.CodeHash, err)
+				return fmt.Errorf("code %x: %w (path %x)", account.CodeHash, err, nodeiter.HexToKeyBytes(it.Path()))
 			}
 		}
 		for dataIt.Next(true) {
 		}
 		if dataIt.Error() != nil {
-			return dataIt.Error()
+			return fmt.Errorf("data iterator error (path %x): %w", nodeiter.HexToKeyBytes(dataIt.Path()), dataIt.Error())
 		}
 	}
 	return it.Error()
 }
 
+// Traverses each iterator in a separate goroutine.
+// Dumps to a recovery file on failure or interrupt.
 func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn func(trie.NodeIterator) error) error {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	tracker := tracker.New(recoveryFile, iterCount)
