@@ -205,7 +205,8 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 	return it.Error()
 }
 
-// Traverses each iterator in a separate goroutine, dumping to a recovery file on failure. Handles signals
+// Traverses each iterator in a separate goroutine.
+// Dumps to a recovery file on failure or interrupt.
 func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn func(trie.NodeIterator) error) error {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	tracker := tracker.New(recoveryFile, iterCount)

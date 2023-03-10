@@ -224,6 +224,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 	AfterEach(func() {
 		os.RemoveAll(tmp)
 		v.Close()
+		db.Close()
 	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
