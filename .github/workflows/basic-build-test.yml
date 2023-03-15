@@ -20,4 +20,11 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-      
+
+    - name : Bring up docker DB containers
+      run: docker compose up -d
+
+    - name: Run test
+      run: |
+        sleep 30;
+        go test -v ./...

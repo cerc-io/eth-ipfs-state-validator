@@ -203,7 +203,7 @@ var (
 
 	config = validator.Config{
 		Hostname: "localhost",
-		Name:     "cerc_testing",
+		Name:     "vulcanize_testing",
 		User:     "vdbm",
 		Password: "password",
 		Port:     8077,
@@ -308,19 +308,19 @@ var _ = Describe("PG-IPFS Validator", func() {
 		})
 		It("Returns an error the storage root node is missing", func() {
 			loadTrie(nil, missingRootStorageNodes)
-			err = v.ValidateStorageTrie(contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
 		It("Returns an error if the entire storage trie cannot be validated", func() {
 			loadTrie(nil, missingNodeStorageNodes)
-			err = v.ValidateStorageTrie(contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
 		It("Returns no error if the entire storage trie can be validated", func() {
 			loadTrie(nil, trieStorageNodes)
-			err = v.ValidateStorageTrie(contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})

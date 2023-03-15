@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/spf13/viper"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -61,6 +62,17 @@ var (
 	emptyCodeHash         = crypto.Keccak256(nil)
 )
 
+type KVSWithAncient struct {
+	kvs ethdb.KeyValueStore
+	ethdb.Database
+}
+
+func NewKVSDatabaseWithAncient(kvs ethdb.KeyValueStore) ethdb.Database {
+	return &KVSWithAncient{
+		kvs: kvs,
+	}
+}
+
 // NewPGIPFSValidator returns a new trie validator ontop of a connection pool for an IPFS backing Postgres database
 func NewPGIPFSValidator(db *sqlx.DB, par Params) *Validator {
 	kvs := pgipfsethdb.NewKeyValueStore(db, pgipfsethdb.CacheConfig{
@@ -78,7 +90,7 @@ func NewPGIPFSValidator(db *sqlx.DB, par Params) *Validator {
 	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(kvs),
+		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
 		stateDatabase: state.NewDatabase(database),
 		db:            database.(*pgipfsethdb.Database),
 		params:        par,
@@ -96,7 +108,7 @@ func NewIPFSValidator(bs blockservice.BlockService, par Params) *Validator {
 	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(kvs),
+		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
 		stateDatabase: state.NewDatabase(database),
 		params:        par,
 	}
@@ -108,7 +120,7 @@ func NewIPFSValidator(bs blockservice.BlockService, par Params) *Validator {
 func NewValidator(kvs ethdb.KeyValueStore, database ethdb.Database) *Validator {
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(kvs),
+		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
 		stateDatabase: state.NewDatabase(database),
 	}
 }
@@ -147,10 +159,10 @@ func (v *Validator) ValidateStateTrie(stateRoot common.Hash) error {
 }
 
 // ValidateStorageTrie returns an error if the storage trie for the provided storage root and contract address cannot be confirmed as complete
-func (v *Validator) ValidateStorageTrie(address common.Address, storageRoot common.Hash) error {
+func (v *Validator) ValidateStorageTrie(stateRoot common.Hash, address common.Address, storageRoot common.Hash) error {
 	// Generate the state.NodeIterator for this root
 	addrHash := crypto.Keccak256Hash(address.Bytes())
-	t, err := v.stateDatabase.OpenStorageTrie(addrHash, storageRoot)
+	t, err := v.stateDatabase.OpenStorageTrie(stateRoot, addrHash, storageRoot)
 	if err != nil {
 		return err
 	}
@@ -184,7 +196,7 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 		if err := rlp.Decode(bytes.NewReader(it.LeafBlob()), &account); err != nil {
 			return err
 		}
-		dataTrie, err := v.stateDatabase.OpenStorageTrie(common.BytesToHash(it.LeafKey()), account.Root)
+		dataTrie, err := v.stateDatabase.OpenStorageTrie(common.HexToHash(viper.GetString("validator.stateRoot")), common.BytesToHash(it.LeafKey()), account.Root)
 		if err != nil {
 			return err
 		}

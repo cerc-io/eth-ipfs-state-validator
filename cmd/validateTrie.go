@@ -97,9 +97,13 @@ func validateTrie() {
 		if contractAddrStr == "" {
 			logWithCommand.Fatal("must provide a contract address for storage trie validation")
 		}
+		if stateRootStr == "" {
+			logWithCommand.Fatal("must provide a state root for state trie validation")
+		}
 		storageRoot := common.HexToHash(storageRootStr)
 		addr := common.HexToAddress(contractAddrStr)
-		if err = v.ValidateStorageTrie(addr, storageRoot); err != nil {
+		stateRoot := common.HexToHash(stateRootStr)
+		if err = v.ValidateStorageTrie(stateRoot, addr, storageRoot); err != nil {
 			logWithCommand.Fatalf("Storage trie for contract %s and root %s not complete\r\nerr: %v", addr.String(), storageRoot.String(), err)
 		}
 		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr.String(), storageRoot.String())
