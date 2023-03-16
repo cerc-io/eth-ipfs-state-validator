@@ -228,7 +228,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 	})
 	Describe("ValidateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error if the state root node is missing", func() {
@@ -279,7 +279,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStateTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the state root node is missing", func() {
@@ -303,7 +303,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 
 	Describe("ValidateStorageTrie", func() {
 		AfterEach(func() {
-			err = validator.ResetTestDB(db)
+			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("Returns an error the storage root node is missing", func() {
@@ -330,11 +330,11 @@ func loadTrie(stateNodes, storageNodes [][]byte) {
 	tx, err := db.Beginx()
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := validator.PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
+		_, err := PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	err = tx.Commit()
