@@ -3,9 +3,9 @@ module github.com/cerc-io/eth-ipfs-state-validator/v4
 go 1.18
 
 require (
-	github.com/cerc-io/go-eth-state-node-iterator v1.1.10
-	github.com/cerc-io/ipfs-ethdb/v4 v4.0.11-alpha
-	github.com/ethereum/go-ethereum v1.11.2
+	github.com/cerc-io/go-eth-state-node-iterator v1.1.11
+	github.com/cerc-io/ipfs-ethdb/v4 v4.0.12-alpha
+	github.com/ethereum/go-ethereum v1.11.4
 	github.com/ipfs/go-blockservice v0.4.0
 	github.com/ipfs/go-cid v0.2.0
 	github.com/ipfs/go-ipfs-blockstore v1.2.0
@@ -63,6 +63,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -194,7 +195,6 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.1 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/prometheus/tsdb v0.10.0 // indirect
 	github.com/raulk/clock v1.1.0 // indirect
 	github.com/raulk/go-watchdog v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
@@ -246,4 +246,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.11.2 => github.com/cerc-io/go-ethereum v1.11.2-statediff-4.3.7-alpha
+replace github.com/ethereum/go-ethereum v1.11.4 => github.com/cerc-io/go-ethereum v1.11.4-statediff-4.3.9-alpha
