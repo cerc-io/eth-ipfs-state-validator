@@ -20,8 +20,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -36,10 +37,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	nodeiter "github.com/cerc-io/go-eth-state-node-iterator"
-	"github.com/cerc-io/go-eth-state-node-iterator/tracker"
 	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v4"
 	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v4/postgres"
+	nodeiter "github.com/ethereum/go-ethereum/trie/concurrent_iterator"
+	"github.com/ethereum/go-ethereum/trie/concurrent_iterator/tracker"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
