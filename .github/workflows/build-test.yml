@@ -1,13 +1,9 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Basic Go build and test
 
 on:
   pull_request:
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -26,5 +22,5 @@ jobs:
 
     - name: Run test
       run: |
-        sleep 30;
+        sleep 30
         go test -v ./...
