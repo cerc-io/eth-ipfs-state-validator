@@ -1,11 +1,11 @@
-version: "3.2"
+# Containers to run backing DB for unit testing
 
 services:
   migrations:
     restart: on-failure
     depends_on:
       - ipld-eth-db
-    image: git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:v5.0.1-alpha
+    image: git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:v5.0.2-alpha
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "cerc_testing"
@@ -14,6 +14,7 @@ services:
       DATABASE_PORT: 5432
 
   ipld-eth-db:
+    container_name: test-ipld-eth-db
     image: timescale/timescaledb:latest-pg14
     restart: always
     command: ["postgres", "-c", "log_statement=all"]
