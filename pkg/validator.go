@@ -37,8 +37,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v4"
-	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v4/postgres"
+	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v5"
+	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v5/postgres/v1"
 	nodeiter "github.com/ethereum/go-ethereum/trie/concurrent_iterator"
 	"github.com/ethereum/go-ethereum/trie/concurrent_iterator/tracker"
 )

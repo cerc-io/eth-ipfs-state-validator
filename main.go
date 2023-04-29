@@ -18,7 +18,7 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/cerc-io/eth-ipfs-state-validator/v4/cmd"
+	"github.com/cerc-io/eth-ipfs-state-validator/v5/cmd"
 )
 
 func main() {

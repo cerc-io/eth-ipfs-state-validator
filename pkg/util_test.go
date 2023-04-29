@@ -15,7 +15,7 @@ func PublishRaw(tx *sqlx.Tx, codec, mh uint64, raw []byte, blockNumber uint64) (
 	}
 	dbKey := dshelp.MultihashToDsKey(c.Hash())
 	prefixedKey := blockstore.BlockPrefix.String() + dbKey.String()
-	_, err = tx.Exec(`INSERT INTO public.blocks (key, data, block_number) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, prefixedKey, raw, blockNumber)
+	_, err = tx.Exec(`INSERT INTO ipld.blocks (key, data, block_number) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, prefixedKey, raw, blockNumber)
 	return c.String(), err
 }
 
@@ -34,8 +34,8 @@ func RawdataToCid(codec uint64, rawdata []byte, multiHash uint64) (cid.Cid, erro
 	return c, nil
 }
 
-// ResetTestDB drops all rows in the test db public.blocks table
+// ResetTestDB truncates all used tables from the test DB
 func ResetTestDB(db *sqlx.DB) error {
-	_, err := db.Exec("DELETE FROM public.blocks")
+	_, err := db.Exec("TRUNCATE ipld.blocks")
 	return err
 }
