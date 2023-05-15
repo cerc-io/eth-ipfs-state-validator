@@ -85,7 +85,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file location")
 	rootCmd.PersistentFlags().String("logfile", "", "file path for logging")
-	rootCmd.PersistentFlags().String("database-name", "vulcanize_public", "database name")
+	rootCmd.PersistentFlags().String("database-name", "cerc_public", "database name")
 	rootCmd.PersistentFlags().Int("database-port", 5432, "database port")
 	rootCmd.PersistentFlags().String("database-hostname", "localhost", "database hostname")
 	rootCmd.PersistentFlags().String("database-user", "", "database user")

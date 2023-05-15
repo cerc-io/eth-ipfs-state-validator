@@ -1,6 +1,6 @@
 # eth-ipfs-state-validator
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/vulcanize/eth-ipfs-state-validator)](https://goreportcard.com/report/github.com/vulcanize/eth-ipfs-state-validator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cerc-io/eth-ipfs-state-validator)](https://goreportcard.com/report/github.com/cerc-io/eth-ipfs-state-validator)
 
 > Uses [ipfs-ethdb](https://github.com/cerc-io/ipfs-ethdb/tree/master/postgres) to validate completeness of IPFS Ethereum state data
 
@@ -42,7 +42,7 @@ Postgres DB config:
 
 ```toml
 [database]
-    name     = "vulcanize_public"
+    name     = "cerc_public"
     hostname = "localhost"
     user     = "postgres"
     password = ""
@@ -50,7 +50,7 @@ Postgres DB config:
 ```
 
 ## Maintainers
-@vulcanize
+@cerc-io
 @AFDudley
 @i-norden
 

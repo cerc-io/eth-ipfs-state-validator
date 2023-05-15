@@ -203,7 +203,7 @@ var (
 
 	config = validator.Config{
 		Hostname: "localhost",
-		Name:     "vulcanize_testing",
+		Name:     "cerc_testing",
 		User:     "vdbm",
 		Password: "password",
 		Port:     8077,
