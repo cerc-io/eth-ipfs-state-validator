@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/cerc-io/ipfs-ethdb/v5 v5.0.0-alpha
+	github.com/cerc-io/ipld-eth-statedb v0.0.4-alpha
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/ipfs/go-blockservice v0.5.0
 	github.com/ipfs/go-cid v0.3.2
@@ -34,6 +35,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/cerc-io/ipld-eth-statedb v0.0.4-alpha // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect

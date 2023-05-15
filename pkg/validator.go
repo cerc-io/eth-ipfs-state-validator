@@ -25,12 +25,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ipfs/go-blockservice"
 	"github.com/jmoiron/sqlx"
 	"github.com/mailgun/groupcache/v2"
@@ -38,7 +36,9 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v5"
-	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v5/postgres/v1"
+	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v5/postgres/v0"
+	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/state"
+	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/trie"
 	nodeiter "github.com/ethereum/go-ethereum/trie/concurrent_iterator"
 	"github.com/ethereum/go-ethereum/trie/concurrent_iterator/tracker"
 )
@@ -203,10 +203,9 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 		}
 		dataIt := dataTrie.NodeIterator(nil)
 		if !bytes.Equal(account.CodeHash, emptyCodeHash) {
-			addrHash := common.BytesToHash(it.LeafKey())
-			_, err := v.stateDatabase.ContractCode(addrHash, common.BytesToHash(account.CodeHash))
+			_, err := v.stateDatabase.ContractCode(common.BytesToHash(account.CodeHash))
 			if err != nil {
-				return fmt.Errorf("code %x: %w (path %x)", account.CodeHash, err, nodeiter.HexToKeyBytes(it.Path()))
+				return fmt.Errorf("code hash %x: %w (path %x)", account.CodeHash, err, nodeiter.HexToKeyBytes(it.Path()))
 			}
 		}
 		for dataIt.Next(true) {

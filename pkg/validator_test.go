@@ -17,7 +17,6 @@
 package validator_test
 
 import (
-	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -234,44 +233,40 @@ var _ = Describe("PG-IPFS Validator", func() {
 		It("Returns an error if the state root node is missing", func() {
 			// we write code to ethdb, there should probably be an EthCode IPLD codec
 			// but there isn't, and we don't need one here since blockstore keys are mh-derived
-			loadTrie(append(missingRootStateNodes, mockCode), trieStorageNodes)
+			loadTrie(missingRootStateNodes, trieStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
 		It("Returns an error if the storage root node is missing", func() {
-			loadTrie(append(trieStateNodes, mockCode), missingRootStorageNodes)
+			loadTrie(trieStateNodes, missingRootStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
 		It("Returns an error if the state trie is missing node(s)", func() {
-			loadTrie(append(missingNodeStateNodes, mockCode), trieStorageNodes)
+			loadTrie(missingNodeStateNodes, trieStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
-			pathSubStr := fmt.Sprintf("path %x", missingStateNodePath)
-			Expect(err.Error()).To(ContainSubstring(pathSubStr))
+			Expect(err.Error()).To(ContainSubstring("%x", missingStateNodePath))
 		})
 		It("Returns an error if the storage trie is missing node(s)", func() {
-			loadTrie(append(trieStateNodes, mockCode), missingNodeStorageNodes)
+			loadTrie(trieStateNodes, missingNodeStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
-			pathSubStr := fmt.Sprintf("path %x", missingStorageNodePath)
-			Expect(err.Error()).To(ContainSubstring(pathSubStr))
+			Expect(err.Error()).To(ContainSubstring("%x", missingStorageNodePath))
 		})
 		It("Returns an error if contract code is missing", func() {
 			loadTrie(trieStateNodes, trieStorageNodes)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
-			codeSubStr := fmt.Sprintf("code %s: not found", codeHash.Hex()[2:])
-			Expect(err.Error()).To(ContainSubstring(codeSubStr))
-			pathSubStr := fmt.Sprintf("path %x", codePath)
-			Expect(err.Error()).To(ContainSubstring(pathSubStr))
+			Expect(err.Error()).To(ContainSubstring("%x", codeHash))
+			Expect(err.Error()).To(ContainSubstring("%x", codePath))
 		})
 		It("Returns no error if the entire state (state trie and storage tries) can be validated", func() {
-			loadTrie(append(trieStateNodes, mockCode), trieStorageNodes)
+			loadTrie(trieStateNodes, trieStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -326,15 +321,19 @@ var _ = Describe("PG-IPFS Validator", func() {
 	})
 })
 
-func loadTrie(stateNodes, storageNodes [][]byte) {
+func loadTrie(stateNodes, storageNodes [][]byte, contractCode ...[]byte) {
 	tx, err := db.Beginx()
 	Expect(err).ToNot(HaveOccurred())
 	for _, node := range stateNodes {
-		_, err := PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
+		err := PublishRaw(tx, cid.EthStateTrie, multihash.KECCAK_256, node, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	for _, node := range storageNodes {
-		_, err := PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
+		err := PublishRaw(tx, cid.EthStorageTrie, multihash.KECCAK_256, node, blockNumber)
+		Expect(err).ToNot(HaveOccurred())
+	}
+	for _, code := range contractCode {
+		err := PublishRaw(tx, cid.Raw, multihash.KECCAK_256, code, blockNumber)
 		Expect(err).ToNot(HaveOccurred())
 	}
 	err = tx.Commit()
