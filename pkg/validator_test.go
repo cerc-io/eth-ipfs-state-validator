@@ -28,7 +28,7 @@ import (
 	cid "github.com/ipfs/go-cid/_rsrch/cidiface"
 	"github.com/jmoiron/sqlx"
 	"github.com/multiformats/go-multihash"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	validator "github.com/cerc-io/eth-ipfs-state-validator/v5/pkg"

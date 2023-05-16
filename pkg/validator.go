@@ -230,7 +230,7 @@ func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn fun
 	}
 
 	// attempt to restore from recovery file if it exists
-	iters, err := tracker.Restore(tree)
+	iters, err := tracker.Restore(tree.NodeIterator)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn fun
 	}
 
 	if iters == nil { // nothing restored
-		iters = nodeiter.SubtrieIterators(tree, iterCount)
+		iters = nodeiter.SubtrieIterators(tree.NodeIterator, iterCount)
 		for i, it := range iters {
 			iters[i] = tracker.Tracked(it, nil)
 		}
