@@ -1,0 +1,26 @@
+name: Run tests
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version-file: 'go.mod'
+        check-latest: true
+    - name: "Run DB container"
+      working-directory: ./test
+      run: |
+        docker compose up -d --quiet-pull
+    - name: "Build and run tests"
+      run: |
+        until [[ "$(docker inspect test-ipld-eth-db | jq -r '.[0].State.Status')" = 'running' ]]
+        do sleep 1; done &
+
+        go build ./...
+        wait $!
+        go test -v ./...

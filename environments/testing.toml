@@ -1,4 +1,4 @@
 [database]
-  name     = "vulcanize_testing"
+  name     = "cerc_testing"
   hostname = "localhost"
   port     = 5432
