@@ -35,12 +35,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	iterutils "github.com/cerc-io/eth-iterator-utils"
+	"github.com/cerc-io/eth-iterator-utils/tracker"
 	ipfsethdb "github.com/cerc-io/ipfs-ethdb/v5"
 	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v5/postgres/v0"
 	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/state"
 	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/trie"
-	nodeiter "github.com/ethereum/go-ethereum/trie/concurrent_iterator"
-	"github.com/ethereum/go-ethereum/trie/concurrent_iterator/tracker"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
@@ -205,13 +205,13 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 		if !bytes.Equal(account.CodeHash, emptyCodeHash) {
 			_, err := v.stateDatabase.ContractCode(common.BytesToHash(account.CodeHash))
 			if err != nil {
-				return fmt.Errorf("code hash %x: %w (path %x)", account.CodeHash, err, nodeiter.HexToKeyBytes(it.Path()))
+				return fmt.Errorf("code hash %x: %w (path %x)", account.CodeHash, err, iterutils.HexToKeyBytes(it.Path()))
 			}
 		}
 		for dataIt.Next(true) {
 		}
 		if dataIt.Error() != nil {
-			return fmt.Errorf("data iterator error (path %x): %w", nodeiter.HexToKeyBytes(dataIt.Path()), dataIt.Error())
+			return fmt.Errorf("data iterator error (path %x): %w", iterutils.HexToKeyBytes(dataIt.Path()), dataIt.Error())
 		}
 	}
 	return it.Error()
@@ -239,9 +239,9 @@ func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn fun
 	}
 
 	if iters == nil { // nothing restored
-		iters = nodeiter.SubtrieIterators(tree.NodeIterator, iterCount)
+		iters = iterutils.SubtrieIterators(tree.NodeIterator, iterCount)
 		for i, it := range iters {
-			iters[i] = tracker.Tracked(it, nil)
+			iters[i] = tracker.Tracked(it)
 		}
 	}
 

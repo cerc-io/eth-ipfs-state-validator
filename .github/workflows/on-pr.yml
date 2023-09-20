@@ -1,7 +1,0 @@
-name: PR actions
-on:
-  - pull_request
-
-jobs:
-  run-tests:
-    uses: ./.github/workflows/test.yml
