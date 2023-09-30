@@ -220,17 +220,16 @@ func (v *Validator) iterate(it trie.NodeIterator, storage bool) error {
 // Traverses each iterator in a separate goroutine.
 // Dumps to a recovery file on failure or interrupt.
 func iterateTracked(tree state.Trie, recoveryFile string, iterCount uint, fn func(trie.NodeIterator) error) error {
-	ctx, cancelCtx := context.WithCancel(context.Background())
+	ctx, _ := context.WithCancel(context.Background())
 	tracker := tracker.New(recoveryFile, iterCount)
-	tracker.CaptureSignal(cancelCtx)
 	halt := func() {
-		if err := tracker.HaltAndDump(); err != nil {
+		if err := tracker.CloseAndSave(); err != nil {
 			log.Errorf("failed to write recovery file: %v", err)
 		}
 	}
 
 	// attempt to restore from recovery file if it exists
-	iters, err := tracker.Restore(tree.NodeIterator)
+	iters, _, err := tracker.Restore(tree.NodeIterator)
 	if err != nil {
 		return err
 	}
