@@ -70,26 +70,30 @@ func validateTrie() {
 	stateRootStr := viper.GetString("validator.stateRoot")
 	storageRootStr := viper.GetString("validator.storageRoot")
 	contractAddrStr := viper.GetString("validator.address")
+
+	if stateRootStr == "" {
+		logWithCommand.Fatal("must provide a state root for state trie validation")
+	}
+	stateRoot := common.HexToHash(stateRootStr)
+
 	traversal := strings.ToLower(viper.GetString("validator.type"))
 	switch traversal {
 	case "f", "full":
-		if stateRootStr == "" {
-			logWithCommand.Fatal("must provide a state root for full state validation")
-		}
-		stateRoot := common.HexToHash(stateRootStr)
+		logWithCommand.
+			WithField("root", stateRoot).
+			Debug("Validating full state")
 		if err = v.ValidateTrie(stateRoot); err != nil {
-			logWithCommand.Fatalf("State for root %s is not complete\r\nerr: %v", stateRoot.String(), err)
+			logWithCommand.Fatalf("Validation failed: %v", err)
 		}
-		logWithCommand.Infof("State for root %s is complete", stateRoot.String())
+		logWithCommand.Infof("State for root %s is complete", stateRoot)
 	case "state":
-		if stateRootStr == "" {
-			logWithCommand.Fatal("must provide a state root for state trie validation")
-		}
-		stateRoot := common.HexToHash(stateRootStr)
+		logWithCommand.
+			WithField("root", stateRoot).
+			Debug("Validating state trie")
 		if err = v.ValidateStateTrie(stateRoot); err != nil {
-			logWithCommand.Fatalf("State trie for root %s is not complete\r\nerr: %v", stateRoot.String(), err)
+			logWithCommand.Fatalf("Validation failed: %s", err)
 		}
-		logWithCommand.Infof("State trie for root %s is complete", stateRoot.String())
+		logWithCommand.Infof("State trie for root %s is complete", stateRoot)
 	case "storage":
 		if storageRootStr == "" {
 			logWithCommand.Fatal("must provide a storage root for storage trie validation")
@@ -97,16 +101,16 @@ func validateTrie() {
 		if contractAddrStr == "" {
 			logWithCommand.Fatal("must provide a contract address for storage trie validation")
 		}
-		if stateRootStr == "" {
-			logWithCommand.Fatal("must provide a state root for state trie validation")
-		}
 		storageRoot := common.HexToHash(storageRootStr)
 		addr := common.HexToAddress(contractAddrStr)
-		stateRoot := common.HexToHash(stateRootStr)
+		logWithCommand.
+			WithField("contract", addr).
+			WithField("storage root", storageRoot).
+			Debug("Validating storage trie")
 		if err = v.ValidateStorageTrie(stateRoot, addr, storageRoot); err != nil {
-			logWithCommand.Fatalf("Storage trie for contract %s and root %s not complete\r\nerr: %v", addr.String(), storageRoot.String(), err)
+			logWithCommand.Fatalf("Validation failed", err)
 		}
-		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr.String(), storageRoot.String())
+		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr, storageRoot)
 	default:
 		logWithCommand.Fatalf("Invalid traversal level: '%s'", traversal)
 	}
