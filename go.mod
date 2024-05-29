@@ -6,7 +6,7 @@ require (
 	github.com/cerc-io/eth-iterator-utils v0.2.0
 	github.com/cerc-io/ipfs-ethdb/v5 v5.1.0-alpha
 	github.com/cerc-io/ipld-eth-statedb v0.1.0
-	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethereum/go-ethereum v1.13.15
 	github.com/holiman/uint256 v1.2.4
 	github.com/ipfs/boxo v0.19.0
 	github.com/ipfs/go-cid v0.4.1
