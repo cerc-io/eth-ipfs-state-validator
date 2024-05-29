@@ -108,11 +108,11 @@ func validateTrie() {
 			WithField("storage root", storageRoot).
 			Debug("Validating storage trie")
 		if err = v.ValidateStorageTrie(stateRoot, addr, storageRoot); err != nil {
-			logWithCommand.Fatalf("Validation failed", err)
+			logWithCommand.Fatal("Validation failed", err)
 		}
 		logWithCommand.Infof("Storage trie for contract %s and root %s is complete", addr, storageRoot)
 	default:
-		logWithCommand.Fatalf("Invalid traversal level: '%s'", traversal)
+		logWithCommand.Fatal("Invalid traversal level:", traversal)
 	}
 
 	stats := v.GetCacheStats()

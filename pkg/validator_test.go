@@ -17,7 +17,6 @@
 package validator_test
 
 import (
-	"math/big"
 	"os"
 	"path/filepath"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/holiman/uint256"
 	cid "github.com/ipfs/go-cid/_rsrch/cidiface"
 	"github.com/jmoiron/sqlx"
 	"github.com/multiformats/go-multihash"
@@ -69,7 +69,7 @@ var (
 	codePath           = common.Hex2Bytes("6114658a74d9cc9f7acf2c5cd696c3494d7c344d78bfec3add0d91ec4e8d1c45")
 	contractAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    1,
-		Balance:  big.NewInt(0),
+		Balance:  uint256.NewInt(0),
 		CodeHash: codeHash.Bytes(),
 		Root:     crypto.Keccak256Hash(storageBranchRootNode),
 	})
@@ -80,7 +80,7 @@ var (
 
 	minerAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    0,
-		Balance:  big.NewInt(1000),
+		Balance:  uint256.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
@@ -91,7 +91,7 @@ var (
 
 	account1, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    2,
-		Balance:  big.NewInt(1000),
+		Balance:  uint256.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
@@ -102,7 +102,7 @@ var (
 
 	account2, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    0,
-		Balance:  big.NewInt(1000),
+		Balance:  uint256.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
@@ -113,7 +113,7 @@ var (
 
 	bankAccount, _ = rlp.EncodeToBytes(&types.StateAccount{
 		Nonce:    2,
-		Balance:  big.NewInt(1000),
+		Balance:  uint256.NewInt(1000),
 		CodeHash: nullCodeHash.Bytes(),
 		Root:     emptyContractRoot,
 	})
@@ -249,14 +249,14 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
-			Expect(err.Error()).To(ContainSubstring("%x", missingStateNodePath))
+			Expect(err.Error()).To(ContainSubstring("path %x", missingStateNodePath))
 		})
 		It("Returns an error if the storage trie is missing node(s)", func() {
 			loadTrie(trieStateNodes, missingNodeStorageNodes, mockCode)
 			err = v.ValidateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
-			Expect(err.Error()).To(ContainSubstring("%x", missingStorageNodePath))
+			Expect(err.Error()).To(ContainSubstring("path %x", missingStorageNodePath))
 		})
 		It("Returns an error if contract code is missing", func() {
 			loadTrie(trieStateNodes, trieStorageNodes)
@@ -288,6 +288,7 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = v.ValidateStateTrie(stateRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			Expect(err.Error()).To(ContainSubstring("path %x", missingStateNodePath))
 		})
 		It("Returns no error if the entire state trie can be validated", func() {
 			loadTrie(trieStateNodes, nil)
@@ -301,21 +302,22 @@ var _ = Describe("PG-IPFS Validator", func() {
 			err = ResetTestDB(db)
 			Expect(err).ToNot(HaveOccurred())
 		})
-		It("Returns an error the storage root node is missing", func() {
+		It("Returns an error if the storage root node is missing", func() {
 			loadTrie(nil, missingRootStorageNodes)
-			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(common.Hash{}, contractAddr, storageRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
 		})
 		It("Returns an error if the entire storage trie cannot be validated", func() {
 			loadTrie(nil, missingNodeStorageNodes)
-			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(common.Hash{}, contractAddr, storageRoot)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("missing trie node"))
+			Expect(err.Error()).To(ContainSubstring("path %x", missingStorageNodePath))
 		})
 		It("Returns no error if the entire storage trie can be validated", func() {
 			loadTrie(nil, trieStorageNodes)
-			err = v.ValidateStorageTrie(stateRoot, contractAddr, storageRoot)
+			err = v.ValidateStorageTrie(common.Hash{}, contractAddr, storageRoot)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})

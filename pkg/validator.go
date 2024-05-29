@@ -25,14 +25,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ipfs/go-blockservice"
+	"github.com/ipfs/boxo/blockservice"
 	"github.com/jmoiron/sqlx"
 	"github.com/mailgun/groupcache/v2"
 	log "github.com/sirupsen/logrus"
@@ -44,12 +42,13 @@ import (
 	pgipfsethdb "github.com/cerc-io/ipfs-ethdb/v5/postgres/v0"
 	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/state"
 	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/trie"
+	"github.com/cerc-io/ipld-eth-statedb/trie_by_cid/triedb"
 )
 
 // Validator is used for validating Ethereum state and storage tries on PG-IPFS
 type Validator struct {
 	kvs           ethdb.KeyValueStore
-	trieDB        *trie.Database
+	trieDB        *triedb.Database
 	stateDatabase state.Database
 	db            *pgipfsethdb.Database
 
@@ -94,7 +93,7 @@ func NewPGIPFSValidator(db *sqlx.DB, par Params) *Validator {
 	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
+		trieDB:        triedb.NewDatabase(NewKVSDatabaseWithAncient(kvs), nil),
 		stateDatabase: state.NewDatabase(database),
 		db:            database.(*pgipfsethdb.Database),
 		params:        par,
@@ -112,7 +111,7 @@ func NewIPFSValidator(bs blockservice.BlockService, par Params) *Validator {
 	normalizeParams(&par)
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
+		trieDB:        triedb.NewDatabase(NewKVSDatabaseWithAncient(kvs), nil),
 		stateDatabase: state.NewDatabase(database),
 		params:        par,
 	}
@@ -124,7 +123,7 @@ func NewIPFSValidator(bs blockservice.BlockService, par Params) *Validator {
 func NewValidator(kvs ethdb.KeyValueStore, database ethdb.Database) *Validator {
 	return &Validator{
 		kvs:           kvs,
-		trieDB:        trie.NewDatabase(NewKVSDatabaseWithAncient(kvs)),
+		trieDB:        triedb.NewDatabase(NewKVSDatabaseWithAncient(kvs), nil),
 		stateDatabase: state.NewDatabase(database),
 	}
 }
@@ -146,7 +145,7 @@ func (v *Validator) ValidateTrie(stateRoot common.Hash) error {
 	if err != nil {
 		return err
 	}
-	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, it, true) }
+	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, stateRoot, it, true) }
 	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, fullTraversal), v.params.Workers, iterate)
 }
 
@@ -158,7 +157,7 @@ func (v *Validator) ValidateStateTrie(stateRoot common.Hash) error {
 	if err != nil {
 		return err
 	}
-	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, it, false) }
+	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, stateRoot, it, false) }
 	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, stateTraversal), v.params.Workers, iterate)
 }
 
@@ -166,12 +165,13 @@ func (v *Validator) ValidateStateTrie(stateRoot common.Hash) error {
 func (v *Validator) ValidateStorageTrie(stateRoot common.Hash, address common.Address, storageRoot common.Hash) error {
 	// Generate the state.NodeIterator for this root
 	addrHash := crypto.Keccak256Hash(address.Bytes())
-	t, err := v.stateDatabase.OpenStorageTrie(stateRoot, addrHash, storageRoot)
+	// Note: the last argument is the redundant state trie, but will be needed for Verkle tries
+	storage, err := v.stateDatabase.OpenStorageTrie(stateRoot, addrHash, storageRoot, nil)
 	if err != nil {
 		return err
 	}
-	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, it, false) }
-	return iterateTracked(t, fmt.Sprintf(v.params.RecoveryFormat, storageTraversal), v.params.Workers, iterate)
+	iterate := func(ctx context.Context, it trie.NodeIterator) error { return v.iterate(ctx, stateRoot, it, false) }
+	return iterateTracked(storage, fmt.Sprintf(v.params.RecoveryFormat, storageTraversal), v.params.Workers, iterate)
 }
 
 // Close implements io.Closer
@@ -184,7 +184,7 @@ func (v *Validator) Close() error {
 
 // Traverses one iterator fully
 // If storage = true, also traverse storage tries for each leaf.
-func (v *Validator) iterate(ctx context.Context, it trie.NodeIterator, storage bool) error {
+func (v *Validator) iterate(ctx context.Context, stateRoot common.Hash, it trie.NodeIterator, storage bool) error {
 	// Iterate through entire state trie. it.Next() will return false when we have
 	// either completed iteration of the entire trie or run into an error (e.g. a
 	// missing node). If we are able to iterate through the entire trie without error
@@ -206,13 +206,18 @@ func (v *Validator) iterate(ctx context.Context, it trie.NodeIterator, storage b
 		if err := rlp.Decode(bytes.NewReader(it.LeafBlob()), &account); err != nil {
 			return err
 		}
-		dataTrie, err := v.stateDatabase.OpenStorageTrie(common.HexToHash(viper.GetString("validator.stateRoot")), common.BytesToHash(it.LeafKey()), account.Root)
+		// Note: the last argument is the redundant state trie, but will be needed for Verkle tries
+		dataTrie, err := v.stateDatabase.OpenStorageTrie(stateRoot, common.BytesToHash(it.LeafKey()), account.Root, nil)
 		if err != nil {
 			return err
 		}
-		dataIt := dataTrie.NodeIterator(nil)
+		dataIt, err := dataTrie.NodeIterator(nil)
+		if err != nil {
+			return err
+		}
+
 		if !bytes.Equal(account.CodeHash, emptyCodeHash) {
-			_, err := v.stateDatabase.ContractCode(common.BytesToHash(account.CodeHash))
+			_, err := v.stateDatabase.ContractCode(common.Address{}, common.BytesToHash(account.CodeHash))
 			if err != nil {
 				return fmt.Errorf("code hash %x: %w (path %x)", account.CodeHash, err, iterutils.HexToKeyBytes(it.Path()))
 			}
@@ -236,7 +241,6 @@ func iterateTracked(
 ) error {
 	tracker := tracker.New(recoveryFile, iterCount)
 	halt := func() {
-		log.Errorf("writing recovery file: %s", recoveryFile)
 		if err := tracker.CloseAndSave(); err != nil {
 			log.Errorf("failed to write recovery file: %v", err)
 		}
@@ -252,7 +256,10 @@ func iterateTracked(
 	}
 
 	if iters == nil { // nothing restored
-		iters = iterutils.SubtrieIterators(tree.NodeIterator, iterCount)
+		iters, err = iterutils.SubtrieIterators(tree.NodeIterator, iterCount)
+		if err != nil {
+			return err
+		}
 		for i, it := range iters {
 			iters[i] = tracker.Tracked(it)
 		}

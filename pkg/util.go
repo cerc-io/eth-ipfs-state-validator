@@ -19,7 +19,7 @@ package validator
 import (
 	"context"
 
-	"github.com/ipfs/go-blockservice"
+	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/kubo/core"
 	"github.com/ipfs/kubo/repo/fsrepo"
 )
